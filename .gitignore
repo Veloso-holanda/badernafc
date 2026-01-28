@@ -1,0 +1,150 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# ===================================================================
+# Firebase Configuration Files
+# ===================================================================
+# IMPORTANTE: NÃO ignorar arquivos de configuração do Firebase
+# Eles devem ser commitados no repositório
+#
+# Arquivos que DEVEM ser commitados:
+# - google-services.json (Android)
+# - GoogleService-Info.plist (iOS)
+# - lib/firebase_options.dart (gerado pelo FlutterFire CLI)
+#
+# Descomentar apenas se usar variáveis de ambiente para config:
+# google-services.json
+# GoogleService-Info.plist
+# lib/firebase_options.dart
+
+# ===================================================================
+# Secrets e Variáveis Sensíveis
+# ===================================================================
+# Adicionar arquivos com credenciais sensíveis aqui
+*.env
+*.env.local
+*.env.production
+.env.development
+secrets.json
+credentials.json
+
+# ===================================================================
+# Flutter Plugins Adicionais
+# ===================================================================
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# ===================================================================
+# Configurações de IDE Adicionais
+# ===================================================================
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+
+# ===================================================================
+# iOS Específico
+# ===================================================================
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral
+**/ios/ServiceDefinitions.json
+**/ios/Runner/GeneratedPluginRegistrant.*
+
+# ===================================================================
+# Android Específico
+# ===================================================================
+**/android/.gradle/
+**/android/captures/
+**/android/gradlew
+**/android/gradlew.bat
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/**/GeneratedPluginRegistrant.kt
+**/android/key.properties
+
+# ===================================================================
+# Web Específico
+# ===================================================================
+**/web/flutter_service_worker.js
+
+# ===================================================================
+# Build Outputs
+# ===================================================================
+*.apk
+*.aab
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# ===================================================================
+# Logs e Debugging
+# ===================================================================
+*.log
+logs/
+*.swp
+*~
+
+# ===================================================================
+# macOS
+# ===================================================================
+.DS_Store
+**/.DS_Store
+
+# ===================================================================
+# Windows
+# ===================================================================
+Thumbs.db
+desktop.ini
+
+# ===================================================================
+# Backup Files
+# ===================================================================
+*.bak
+*.backup
+*~
