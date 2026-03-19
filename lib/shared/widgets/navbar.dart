@@ -32,7 +32,7 @@ class Navbar extends StatelessWidget {
           top: BorderSide(color: AppColors.navbarBorder, width: 1),
         ),
       ),
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: AppSizes.navbarPadding,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: List.generate(itens.length, (indice) {
@@ -52,7 +52,7 @@ class Navbar extends StatelessWidget {
                         ? AppColors.navbarActive
                         : AppColors.navbarInactive,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AppSizes.sm),
                   Text(
                     item.label,
                     style: ativo

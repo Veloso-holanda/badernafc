@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../theme/app_colors.dart';
-import '../servicos/servico_auth.dart';
+import '../shared.dart';
 import '../../usuarios/telas/tela_login.dart';
 import '../../usuarios/telas/tela_home.dart';
 
@@ -12,7 +11,11 @@ class TelaSplash extends StatefulWidget {
   State<TelaSplash> createState() => _TelaSplashState();
 }
 
-class _TelaSplashState extends State<TelaSplash> {
+class _TelaSplashState extends State<TelaSplash>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controladorAnimacao;
+  late final Animation<double> _animacaoEscala;
+
   @override
   void initState() {
     super.initState();
@@ -22,11 +25,29 @@ class _TelaSplashState extends State<TelaSplash> {
         statusBarIconBrightness: Brightness.light,
       ),
     );
-    _navegar();
+
+    _controladorAnimacao = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
+
+    _animacaoEscala = Tween<double>(begin: 0.6, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _controladorAnimacao,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    _controladorAnimacao.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        _navegar();
+      }
+    });
+
+    _controladorAnimacao.forward();
   }
 
   Future<void> _navegar() async {
-    await Future.delayed(const Duration(seconds: 2));
     if (!mounted) return;
 
     final destino = ServicoAuth.estaLogado
@@ -40,14 +61,27 @@ class _TelaSplashState extends State<TelaSplash> {
   }
 
   @override
+  void dispose() {
+    _controladorAnimacao.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: AppColors.splashBg,
       body: Center(
-        child: Image.asset(
-          'images/baderna_icon.png',
-          width: 390,
-          fit: BoxFit.contain,
+        child: AnimatedBuilder(
+          animation: _animacaoEscala,
+          builder: (context, child) => Transform.scale(
+            scale: _animacaoEscala.value,
+            child: child,
+          ),
+          child: Image.asset(
+            'images/baderna_icon.jpeg',
+            width: 300,
+            fit: BoxFit.contain,
+          ),
         ),
       ),
     );

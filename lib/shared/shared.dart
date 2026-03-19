@@ -11,12 +11,16 @@ export 'widgets/navbar.dart';
 
 // Telas compartilhadas
 export 'telas/tela_splash.dart';
+export 'telas/tela_config.dart';
 
 // Modelos
 export 'modelos/jogador.dart';
 export 'modelos/partida.dart';
 export 'modelos/usuario.dart';
 export 'modelos/ciclo_mensal.dart';
+export 'modelos/configuracoes_gerais.dart';
+export 'modelos/despesa.dart';
+export 'modelos/resumo_financeiro.dart';
 
 // Serviços
 export 'servicos/servico_auth.dart';

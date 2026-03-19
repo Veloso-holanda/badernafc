@@ -37,6 +37,10 @@ abstract final class AppSizes {
   static final BorderRadius borderRadiusLg = BorderRadius.circular(radiusLg);
   static final BorderRadius borderRadiusPill = BorderRadius.circular(radiusPill);
   static final BorderRadius borderRadiusButton = BorderRadius.circular(radiusButton);
+  static const double radiusCard = 12;
+  static final BorderRadius borderRadiusCard = BorderRadius.circular(radiusCard);
+  static const double radiusField = 10;
+  static final BorderRadius borderRadiusField = BorderRadius.circular(radiusField);
 
   // Icon sizes
   static const double iconSm = 14;
@@ -53,9 +57,43 @@ abstract final class AppSizes {
   // Avatar
   static const double avatarSm = 34;
   static const double avatarLg = 36;
+  static const double avatarXl = 80;
+
+  // Menu
+  static const EdgeInsets menuItemPadding = EdgeInsets.all(16);
+  static const double menuItemGap = 14;
 
   // Table row
-  static const double tableRowHeight = 34;
-  static const double tableHeaderHeight = 34;
+  static const double tableRowHeight = 40;
+  static const double tableHeaderHeight = 40;
   static const double separatorHeight = 24;
+
+  // Table cell
+  static const EdgeInsets tableCellPadding = EdgeInsets.symmetric(horizontal: lg);
+
+  // Badge
+  static const EdgeInsets badgePadding = EdgeInsets.symmetric(vertical: sm, horizontal: lg);
+
+  // Field content (form inputs customizados)
+  static const EdgeInsets fieldContentPadding = EdgeInsets.symmetric(horizontal: xl, vertical: 14);
+
+  // Campo label gap (entre label e campo em forms customizados)
+  static const double fieldLabelGap = 6;
+
+  // Icon intermediário (usado em campos de form)
+  static const double iconForm = 18;
+
+  // Navbar
+  static const EdgeInsets navbarPadding = EdgeInsets.fromLTRB(xl, md, xl, xl);
+
+  // Card admin (cadastros/financeiro)
+  static const EdgeInsets cardAdminPadding = EdgeInsets.symmetric(horizontal: 20, vertical: 24);
+  static const double radiusCardAdmin = 16;
+  static final BorderRadius borderRadiusCardAdmin = BorderRadius.circular(radiusCardAdmin);
+
+  // Background image opacity
+  static const double bgImageOpacidade = 0.12;
+
+  // Exit button
+  static const EdgeInsets exitButtonPadding = EdgeInsets.symmetric(vertical: 14, horizontal: xl);
 }

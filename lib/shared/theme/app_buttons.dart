@@ -46,6 +46,18 @@ abstract final class AppButtons {
     shadowColor: const Color(0x66000000),
   );
 
+  // Botão primário de formulário (radius card, sem elevation)
+  static final ButtonStyle primaryForm = ElevatedButton.styleFrom(
+    backgroundColor: AppColors.primary,
+    foregroundColor: AppColors.textWhite,
+    textStyle: AppTypography.button,
+    shape: RoundedRectangleBorder(
+      borderRadius: AppSizes.borderRadiusCard,
+    ),
+    padding: AppSizes.fieldContentPadding,
+    elevation: 0,
+  );
+
   // FAB Sortear
   static final ButtonStyle fabSortear = ElevatedButton.styleFrom(
     backgroundColor: AppColors.fabSortear,

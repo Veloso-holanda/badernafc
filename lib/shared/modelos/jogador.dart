@@ -5,6 +5,7 @@ class Jogador {
   final int nivel;
   final int? nota;
   final bool mensalista;
+  final bool pago;
 
   const Jogador({
     required this.id,
@@ -13,6 +14,7 @@ class Jogador {
     required this.nivel,
     this.nota,
     this.mensalista = false,
+    this.pago = false,
   });
 
   String get nomeExibicao => apelido ?? nome;
@@ -22,7 +24,7 @@ class Jogador {
       id: json['_id'] as String,
       nome: json['nome'] as String,
       apelido: json['apelido'] as String?,
-      nivel: json['nivel'] as int,
+      nivel: (json['nivel'] as num?)?.toInt() ?? 1,
     );
   }
 
@@ -32,9 +34,10 @@ class Jogador {
       id: jogadorData['_id'] as String,
       nome: jogadorData['nome'] as String,
       apelido: jogadorData['apelido'] as String?,
-      nivel: jogadorData['nivel'] as int,
-      nota: json['nota'] as int?,
+      nivel: (jogadorData['nivel'] as num?)?.toInt() ?? 1,
+      nota: (json['nota'] as num?)?.toInt(),
       mensalista: json['mensalista'] as bool? ?? false,
+      pago: json['pago'] as bool? ?? false,
     );
   }
 }

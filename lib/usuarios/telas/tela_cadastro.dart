@@ -43,12 +43,18 @@ class _TelaCadastroState extends State<TelaCadastro> {
       );
 
       // Registra o usuário no backend
-      await ServicoApi.criarUsuario(
-        nome: _apelidoController.text.trim(),
-        email: _emailController.text.trim(),
-        apelido: _apelidoController.text.trim(),
-        telefone: _telefoneController.text.trim(),
-      );
+      try {
+        await ServicoApi.criarUsuario(
+          nome: _apelidoController.text.trim(),
+          email: _emailController.text.trim(),
+          apelido: _apelidoController.text.trim(),
+          telefone: _telefoneController.text.trim(),
+        );
+      } catch (e) {
+        // Se a API falhar, remove o usuário do Firebase para manter consistência
+        await ServicoAuth.usuarioAtual?.delete();
+        rethrow;
+      }
 
       if (!mounted) return;
 
@@ -64,7 +70,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro inesperado: $e')),
+        SnackBar(content: Text('Erro ao criar conta: $e')),
       );
     } finally {
       if (mounted) setState(() => _carregando = false);

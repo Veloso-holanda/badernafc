@@ -2,7 +2,8 @@ abstract final class Api {
   // Mude para true quando quiser apontar para produção
   static const bool apiLocal = true;
 
-  static const String _urlLocal = 'http://192.168.100.8:3000/api';
+  // Emulador Android: use 10.0.2.2 | Device físico: use o IP da rede local
+  static const String _urlLocal = 'http://192.168.100.8:3000';
   static const String _urlProd = 'https://api.badernafc.com.br';
 
   static String get baseUrl => apiLocal ? _urlLocal : _urlProd;

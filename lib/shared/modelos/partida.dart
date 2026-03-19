@@ -5,6 +5,8 @@ class Partida {
   final String status;
   final DateTime data;
   final String horario;
+  final DateTime? aberturaLista;
+  final DateTime? fechamentoLista;
   final List<Jogador> jogadores;
   final List<Jogador> listaEspera;
 
@@ -13,9 +15,18 @@ class Partida {
     required this.status,
     required this.data,
     required this.horario,
+    this.aberturaLista,
+    this.fechamentoLista,
     required this.jogadores,
     required this.listaEspera,
   });
+
+  bool get listaAberta {
+    final agora = DateTime.now();
+    if (aberturaLista != null && agora.isBefore(aberturaLista!)) return false;
+    if (fechamentoLista != null && agora.isAfter(fechamentoLista!)) return false;
+    return status == 'aberta' || status == 'aguardando';
+  }
 
   String get dataFormatada {
     final d = data;
@@ -33,9 +44,15 @@ class Partida {
 
     return Partida(
       id: json['_id'] as String,
-      status: json['status'] as String? ?? 'aberta',
+      status: json['status'] as String? ?? 'aguardando',
       data: DateTime.parse(json['data'] as String),
       horario: json['horario'] as String? ?? '',
+      aberturaLista: json['aberturaLista'] != null
+          ? DateTime.parse(json['aberturaLista'] as String)
+          : null,
+      fechamentoLista: json['fechamentoLista'] != null
+          ? DateTime.parse(json['fechamentoLista'] as String)
+          : null,
       jogadores: jogadoresList,
       listaEspera: esperaList,
     );
