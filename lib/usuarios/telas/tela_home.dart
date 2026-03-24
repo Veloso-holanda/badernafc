@@ -91,6 +91,32 @@ class _TelaHomeState extends State<TelaHome> {
     }
   }
 
+  Future<void> _confirmarPresenca() async {
+    final jogadorId = _usuario?.jogadorVinculadoId;
+    if (jogadorId == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Você precisa vincular um jogador antes de confirmar presença.')),
+      );
+      return;
+    }
+
+    if (_partida == null) return;
+
+    try {
+      await ServicoApi.confirmarPresenca(_partida!.id, jogadorId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Presença confirmada!')),
+      );
+      _carregarDados();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao confirmar presença: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -365,11 +391,36 @@ class _TelaHomeState extends State<TelaHome> {
                 height: AppSizes.fabHeight,
                 child: ElevatedButton.icon(
                   style: AppButtons.fab,
-                  onPressed: () {
-                    // TODO: confirmar presença com jogadorId do usuário vinculado
-                  },
+                  onPressed: _confirmarPresenca,
                   icon: const Icon(Icons.check_circle_outline, size: AppSizes.iconMd),
                   label: const Text('Confirmar presença'),
+                ),
+              ),
+            ),
+          ),
+
+        // FAB Sortear (admin, partida fechada)
+        if (_usuario?.ehAdmin == true &&
+            _partida != null &&
+            _partida!.status == 'fechada')
+          Positioned(
+            bottom: AppSizes.xl,
+            left: 0,
+            right: 0,
+            child: Center(
+              child: SizedBox(
+                width: 270,
+                height: AppSizes.fabHeight,
+                child: ElevatedButton.icon(
+                  style: AppButtons.fabSortear,
+                  onPressed: () {
+                    // TODO: navegar para tela de sorteio
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Sorteio em breve!')),
+                    );
+                  },
+                  icon: const Icon(Icons.shuffle, size: AppSizes.iconMd),
+                  label: const Text('Sortear Times'),
                 ),
               ),
             ),
@@ -478,8 +529,21 @@ class _TelaHomeState extends State<TelaHome> {
     );
   }
 
+  void _abrirPerfilJogador(Jogador jogador) {
+    showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => _ModalPerfilJogadorHome(
+        jogador: jogador,
+      ),
+    );
+  }
+
   Widget _buildLinhaJogador(int numero, Jogador jogador, {bool alternar = false}) {
-    return Container(
+    return GestureDetector(
+      onTap: () => _abrirPerfilJogador(jogador),
+      child: Container(
       height: AppSizes.tableRowHeight,
       padding: AppSizes.tableCellPadding,
       color: alternar ? AppColors.tableRowAltBg : AppColors.tableRowBg,
@@ -515,6 +579,7 @@ class _TelaHomeState extends State<TelaHome> {
           ),
         ],
       ),
+      ),
     );
   }
 
@@ -529,4 +594,249 @@ class _TelaHomeState extends State<TelaHome> {
       ),
     );
   }
+}
+
+// ─── Modal Perfil Jogador (simplificado, só visualização) ────────────────────
+
+class _ModalPerfilJogadorHome extends StatelessWidget {
+  final Jogador jogador;
+
+  const _ModalPerfilJogadorHome({required this.jogador});
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      initialChildSize: 0.75,
+      minChildSize: 0.4,
+      maxChildSize: 0.9,
+      builder: (_, scrollController) => Container(
+        decoration: const BoxDecoration(
+          color: AppColors.background,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          children: [
+            // Handle bar
+            Padding(
+              padding: const EdgeInsets.only(top: AppSizes.lg, bottom: AppSizes.md),
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppColors.textMuted,
+                  borderRadius: AppSizes.borderRadiusPill,
+                ),
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                child: _buildCarta(),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCarta() {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF3D2A0F),
+            Color(0xFF2A1A06),
+            Color(0xFF1A1208),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.star, width: 2.5),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x55E8922E),
+            blurRadius: 24,
+            spreadRadius: 4,
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // Padrão decorativo
+          Positioned.fill(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(18),
+              child: CustomPaint(painter: _PadraoCartaHomePainter()),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            child: Column(
+              children: [
+                // Topo: nível e badge
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.star.withValues(alpha: 0.2),
+                        borderRadius: AppSizes.borderRadiusMd,
+                        border: Border.all(color: AppColors.star.withValues(alpha: 0.4)),
+                      ),
+                      child: Text(
+                        '${jogador.nivel}',
+                        style: AppTypography.headerTitle.copyWith(
+                          color: AppColors.star,
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.3),
+                        borderRadius: AppSizes.borderRadiusPill,
+                        border: Border.all(color: AppColors.star.withValues(alpha: 0.4)),
+                      ),
+                      child: Text(
+                        'BADERNA FC',
+                        style: AppTypography.labelSmall.copyWith(
+                          color: AppColors.star,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: AppSizes.xxl),
+
+                // Avatar
+                Container(
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.star, width: 3),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x44E8922E),
+                        blurRadius: 16,
+                        spreadRadius: 2,
+                      ),
+                    ],
+                  ),
+                  child: CircleAvatar(
+                    radius: 55,
+                    backgroundColor: AppColors.tableHeaderBg,
+                    backgroundImage: jogador.fotoUrl != null
+                        ? NetworkImage(jogador.fotoUrl!)
+                        : null,
+                    child: jogador.fotoUrl == null
+                        ? Text(
+                            (jogador.apelido ?? jogador.nome)
+                                .substring(0, 1)
+                                .toUpperCase(),
+                            style: AppTypography.headerTitle.copyWith(
+                              color: AppColors.star,
+                              fontSize: 44,
+                            ),
+                          )
+                        : null,
+                  ),
+                ),
+
+                const SizedBox(height: AppSizes.xxl),
+
+                // Divisor dourado
+                Container(
+                  height: 2,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        Colors.transparent,
+                        AppColors.star.withValues(alpha: 0.6),
+                        AppColors.star,
+                        AppColors.star.withValues(alpha: 0.6),
+                        Colors.transparent,
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: AppSizes.xl),
+
+                // Nome
+                Text(
+                  jogador.nome.toUpperCase(),
+                  style: AppTypography.headerTitle.copyWith(
+                    fontSize: 22,
+                    letterSpacing: 2,
+                    fontWeight: FontWeight.w900,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+
+                if (jogador.apelido != null) ...[
+                  const SizedBox(height: AppSizes.sm),
+                  Text(
+                    '"${jogador.apelido!}"',
+                    style: AppTypography.bodySmall.copyWith(
+                      fontStyle: FontStyle.italic,
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+
+                const SizedBox(height: AppSizes.xl),
+
+                // Estrelas
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(5, (i) {
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: Icon(
+                        Icons.star_rounded,
+                        size: AppSizes.starPerfil,
+                        color: i < jogador.nivel
+                            ? AppColors.star
+                            : AppColors.starInactive,
+                      ),
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PadraoCartaHomePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = AppColors.star.withValues(alpha: 0.04)
+      ..strokeWidth = 1
+      ..style = PaintingStyle.stroke;
+
+    for (double i = -size.height; i < size.width + size.height; i += 30) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

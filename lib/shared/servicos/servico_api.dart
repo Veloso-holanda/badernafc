@@ -157,6 +157,20 @@ class ServicoApi {
     return CicloMensal.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
+  static Future<List<CicloMensal>> obterTodosCiclos() async {
+    final resposta = await http.get(
+      Uri.parse('${Api.baseUrl}/ciclos-mensais'),
+      headers: await _headers(),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao buscar ciclos: ${resposta.statusCode}');
+    }
+    final lista = jsonDecode(resposta.body) as List;
+    return lista
+        .map((j) => CicloMensal.fromJson(j as Map<String, dynamic>))
+        .toList();
+  }
+
   static Future<CicloMensal?> obterCicloAtual() async {
     final resposta = await http.get(
       Uri.parse('${Api.baseUrl}/ciclos-mensais/atual'),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import '../../shared/shared.dart';
+import 'tela_detalhe_financeiro.dart';
 
 class TelaFinanceiro extends StatefulWidget {
   const TelaFinanceiro({super.key});
@@ -10,11 +10,16 @@ class TelaFinanceiro extends StatefulWidget {
 }
 
 class _TelaFinanceiroState extends State<TelaFinanceiro> {
-  ResumoFinanceiro? _resumo;
-  List<Despesa> _despesas = [];
-  CicloMensal? _ciclo;
+  List<CicloMensal> _todosCiclos = [];
+  List<int> _anosDisponiveis = [];
+  int _anoSelecionado = DateTime.now().year;
   bool _carregando = true;
   String? _erro;
+
+  static const _meses = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
+  ];
 
   @override
   void initState() {
@@ -29,28 +34,21 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
     });
 
     try {
-      final ciclo = await ServicoApi.obterCicloAtual();
-      if (ciclo == null) {
-        if (!mounted) return;
-        setState(() {
-          _ciclo = null;
-          _resumo = null;
-          _despesas = [];
-          _carregando = false;
-        });
-        return;
-      }
+      final ciclos = await ServicoApi.obterTodosCiclos();
 
-      final resultados = await Future.wait([
-        ServicoApi.obterResumoFinanceiro(ciclo.id),
-        ServicoApi.obterDespesasDoCiclo(ciclo.id),
-      ]);
+      final anos = ciclos
+          .map((c) => c.dataInicial.year)
+          .toSet()
+          .toList()
+        ..sort((a, b) => b.compareTo(a));
 
       if (!mounted) return;
       setState(() {
-        _ciclo = ciclo;
-        _resumo = resultados[0] as ResumoFinanceiro;
-        _despesas = resultados[1] as List<Despesa>;
+        _todosCiclos = ciclos;
+        _anosDisponiveis = anos;
+        if (anos.isNotEmpty && !anos.contains(_anoSelecionado)) {
+          _anoSelecionado = anos.first;
+        }
         _carregando = false;
       });
     } catch (e) {
@@ -62,8 +60,16 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
     }
   }
 
-  String _formatarValor(double valor) {
-    return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
+  List<CicloMensal> get _ciclosFiltrados {
+    final filtrados = _todosCiclos
+        .where((c) => c.dataInicial.year == _anoSelecionado)
+        .toList()
+      ..sort((a, b) => b.dataInicial.compareTo(a.dataInicial));
+    return filtrados;
+  }
+
+  String _nomeCiclo(CicloMensal ciclo) {
+    return 'Ciclo ${_meses[ciclo.dataInicial.month - 1]}';
   }
 
   String _formatarData(DateTime data) {
@@ -72,187 +78,19 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
         '${data.year}';
   }
 
-  Future<void> _mostrarDialogDespesa() async {
-    final descricaoController = TextEditingController();
-    final valorController = TextEditingController();
-    DateTime? dataSelecionada;
-
-    final resultado = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return StatefulBuilder(
-          builder: (ctx, setDialogState) {
-            return AlertDialog(
-              backgroundColor: AppColors.background,
-              shape: RoundedRectangleBorder(borderRadius: AppSizes.borderRadiusCardAdmin),
-              title: Text('Registrar Despesa', style: AppTypography.titleMedium),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    TextField(
-                      controller: descricaoController,
-                      style: AppTypography.bodyMedium,
-                      decoration: InputDecoration(
-                        hintText: 'Descrição',
-                        hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.inputPlaceholder),
-                        filled: true,
-                        fillColor: AppColors.formFieldBg,
-                        border: OutlineInputBorder(
-                          borderRadius: AppSizes.borderRadiusField,
-                          borderSide: BorderSide(color: AppColors.formFieldBorder),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: AppSizes.borderRadiusField,
-                          borderSide: BorderSide(color: AppColors.formFieldBorder),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: AppSizes.borderRadiusField,
-                          borderSide: const BorderSide(color: AppColors.primary),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.formGap),
-                    TextField(
-                      controller: valorController,
-                      keyboardType: const TextInputType.numberWithOptions(decimal: true),
-                      inputFormatters: [
-                        FilteringTextInputFormatter.allow(RegExp(r'[\d,.]')),
-                      ],
-                      style: AppTypography.bodyMedium,
-                      decoration: InputDecoration(
-                        hintText: 'Valor (R\$)',
-                        hintStyle: AppTypography.bodySmall.copyWith(color: AppColors.inputPlaceholder),
-                        filled: true,
-                        fillColor: AppColors.formFieldBg,
-                        border: OutlineInputBorder(
-                          borderRadius: AppSizes.borderRadiusField,
-                          borderSide: BorderSide(color: AppColors.formFieldBorder),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: AppSizes.borderRadiusField,
-                          borderSide: BorderSide(color: AppColors.formFieldBorder),
-                        ),
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: AppSizes.borderRadiusField,
-                          borderSide: const BorderSide(color: AppColors.primary),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppSizes.formGap),
-                    GestureDetector(
-                      onTap: () async {
-                        final data = await showDatePicker(
-                          context: ctx,
-                          initialDate: dataSelecionada ?? DateTime.now(),
-                          firstDate: DateTime(2020),
-                          lastDate: DateTime.now().add(const Duration(days: 365)),
-                          builder: (context, child) {
-                            return Theme(
-                              data: Theme.of(context).copyWith(
-                                colorScheme: const ColorScheme.dark(
-                                  primary: AppColors.primary,
-                                  surface: AppColors.background,
-                                  onSurface: AppColors.textWhite,
-                                ),
-                              ),
-                              child: child!,
-                            );
-                          },
-                        );
-                        if (data != null) {
-                          setDialogState(() => dataSelecionada = data);
-                        }
-                      },
-                      child: Container(
-                        width: double.infinity,
-                        padding: AppSizes.fieldContentPadding,
-                        decoration: BoxDecoration(
-                          color: AppColors.formFieldBg,
-                          borderRadius: AppSizes.borderRadiusField,
-                          border: Border.all(color: AppColors.formFieldBorder),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(Icons.calendar_today, color: AppColors.star, size: AppSizes.iconForm),
-                            const SizedBox(width: AppSizes.md),
-                            Text(
-                              dataSelecionada != null
-                                  ? _formatarData(dataSelecionada!)
-                                  : 'Data (opcional)',
-                              style: AppTypography.bodySmall.copyWith(
-                                color: dataSelecionada != null
-                                    ? AppColors.textWhite
-                                    : AppColors.inputPlaceholder,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              actions: [
-                TextButton(
-                  style: AppButtons.text,
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancelar'),
-                ),
-                ElevatedButton(
-                  style: AppButtons.primaryForm,
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text('Salvar'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+  void _abrirDetalhe(CicloMensal ciclo) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TelaDetalheFinanceiro(ciclo: ciclo),
+      ),
     );
-
-    if (resultado != true) return;
-
-    final descricao = descricaoController.text.trim();
-    final valorTexto = valorController.text.trim().replaceAll(',', '.');
-    final valor = double.tryParse(valorTexto);
-
-    if (descricao.isEmpty || valor == null || valor <= 0) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Informe descrição e valor válidos')),
-      );
-      return;
-    }
-
-    try {
-      await ServicoApi.criarDespesa(
-        cicloMensalId: _ciclo!.id,
-        descricao: descricao,
-        valor: valor,
-        data: dataSelecionada,
-      );
-      if (!mounted) return;
-      _carregarDados();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao registrar despesa: $e')),
-      );
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      floatingActionButton: _ciclo != null
-          ? FloatingActionButton(
-              backgroundColor: AppColors.primary,
-              onPressed: _mostrarDialogDespesa,
-              child: const Icon(Icons.add, color: AppColors.textWhite),
-            )
-          : null,
       body: Stack(
         children: [
           // Fundo P&B
@@ -319,7 +157,7 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
             children: [
               const Icon(Icons.error_outline, color: AppColors.textMuted, size: 48),
               const SizedBox(height: AppSizes.md),
-              Text('Erro ao carregar finanças', style: AppTypography.titleMedium),
+              Text('Erro ao carregar ciclos', style: AppTypography.titleMedium),
               const SizedBox(height: AppSizes.sm),
               Text(_erro!, style: AppTypography.bodySmall, textAlign: TextAlign.center),
               const SizedBox(height: AppSizes.xl),
@@ -334,17 +172,17 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
       );
     }
 
-    if (_ciclo == null || _resumo == null) {
+    if (_todosCiclos.isEmpty) {
       return Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.account_balance_wallet_outlined, color: AppColors.textMuted, size: 64),
             const SizedBox(height: AppSizes.md),
-            Text('Nenhum ciclo ativo', style: AppTypography.titleMedium),
+            Text('Nenhum ciclo encontrado', style: AppTypography.titleMedium),
             const SizedBox(height: AppSizes.sm),
             Text(
-              'Crie um ciclo mensal para ver o resumo financeiro.',
+              'Crie um ciclo mensal para ver o financeiro.',
               style: AppTypography.bodySmall,
               textAlign: TextAlign.center,
             ),
@@ -352,6 +190,8 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
         ),
       );
     }
+
+    final ciclos = _ciclosFiltrados;
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -362,19 +202,33 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Card resumo
-            _buildCardResumo(),
+            // Seletor de ano
+            _buildSeletorAno(),
 
             const SizedBox(height: AppSizes.sectionGap),
 
-            // Despesas
-            Text('Despesas', style: AppTypography.titleMedium),
-            const SizedBox(height: AppSizes.md),
+            // Subtítulo
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Ciclos de $_anoSelecionado', style: AppTypography.titleMedium),
+                Text(
+                  '${ciclos.length} ciclo${ciclos.length != 1 ? 's' : ''}',
+                  style: AppTypography.labelSmall.copyWith(color: AppColors.textMuted),
+                ),
+              ],
+            ),
 
-            if (_despesas.isEmpty)
-              _buildDespesasVazio()
+            const SizedBox(height: AppSizes.xl),
+
+            // Lista de ciclos
+            if (ciclos.isEmpty)
+              _buildCiclosVazio()
             else
-              _buildTabelaDespesas(),
+              ...ciclos.map((ciclo) => Padding(
+                    padding: const EdgeInsets.only(bottom: AppSizes.lg),
+                    child: _buildCardCiclo(ciclo),
+                  )),
 
             const SizedBox(height: AppSizes.xxxl),
           ],
@@ -383,178 +237,141 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
     );
   }
 
-  Widget _buildCardResumo() {
+  Widget _buildSeletorAno() {
     return Container(
-      width: double.infinity,
-      padding: AppSizes.cardAdminPadding,
+      height: 48,
       decoration: BoxDecoration(
-        color: AppColors.cardAdminBg,
-        borderRadius: AppSizes.borderRadiusCardAdmin,
-        border: Border.all(color: AppColors.cardAdminBorder),
+        color: AppColors.inputBg,
+        borderRadius: AppSizes.borderRadiusPill,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.md),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text('Resumo do Ciclo', style: AppTypography.titleMedium),
-          const SizedBox(height: AppSizes.xl),
-
-          _buildLinhaResumo(
-            'Mensalistas (${_resumo!.quantidadeMensalistas}x ${_formatarValor(_resumo!.valorMensalista)})',
-            _resumo!.receitaMensalistas,
-          ),
-          const SizedBox(height: AppSizes.md),
-          _buildLinhaResumo(
-            'Diaristas (${_resumo!.quantidadeDiaristasPagos}x ${_formatarValor(_resumo!.diaria)})',
-            _resumo!.receitaDiaristas,
-          ),
-
-          const SizedBox(height: AppSizes.lg),
-          Divider(color: AppColors.textMuted.withValues(alpha: 0.3), height: 1),
-          const SizedBox(height: AppSizes.lg),
-
-          _buildLinhaResumo('Receita Total', _resumo!.receitaTotal, destaque: true),
-          const SizedBox(height: AppSizes.md),
-          _buildLinhaResumo('Ciclo Mensal', -_resumo!.valorCicloMensal, negativo: true),
-          const SizedBox(height: AppSizes.md),
-          _buildLinhaResumo('Despesas Manuais', -_resumo!.despesasManuais, negativo: true),
-          const SizedBox(height: AppSizes.md),
-          _buildLinhaResumo('Total Despesas', -_resumo!.despesasTotal, negativo: true, destaque: true),
-
-          const SizedBox(height: AppSizes.lg),
-          Divider(color: AppColors.textMuted.withValues(alpha: 0.3), height: 1),
-          const SizedBox(height: AppSizes.lg),
-
-          _buildLinhaResumo(
-            'Saldo',
-            _resumo!.saldo,
-            destaque: true,
-            corValor: _resumo!.saldo >= 0 ? AppColors.success : AppColors.error,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLinhaResumo(
-    String label,
-    double valor, {
-    bool destaque = false,
-    bool negativo = false,
-    Color? corValor,
-  }) {
-    final textoValor = negativo
-        ? '- ${_formatarValor(valor.abs())}'
-        : _formatarValor(valor);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Text(
-            label,
-            style: destaque
-                ? AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w700)
-                : AppTypography.bodySmall.copyWith(color: AppColors.textWhite),
-          ),
-        ),
-        Text(
-          textoValor,
-          style: destaque
-              ? AppTypography.bodyMedium.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: corValor ?? AppColors.textWhite,
-                )
-              : AppTypography.bodySmall.copyWith(
-                  color: corValor ?? (negativo ? AppColors.error : AppColors.textWhite),
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildTabelaDespesas() {
-    return ClipRRect(
-      borderRadius: AppSizes.borderRadiusMd,
-      child: Column(
-        children: [
-          // Header
-          Container(
-            height: AppSizes.tableHeaderHeight,
-            padding: AppSizes.tableCellPadding,
-            color: AppColors.tableHeaderBg,
-            child: Row(
-              children: [
-                Expanded(
-                  flex: 3,
-                  child: Text('Descrição', style: AppTypography.tableHeader),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text('Valor', style: AppTypography.tableHeader, textAlign: TextAlign.right),
-                ),
-                Expanded(
-                  flex: 2,
-                  child: Text('Data', style: AppTypography.tableHeader, textAlign: TextAlign.center),
-                ),
-              ],
+          // Seta esquerda
+          GestureDetector(
+            onTap: () {
+              final idx = _anosDisponiveis.indexOf(_anoSelecionado);
+              if (idx < _anosDisponiveis.length - 1) {
+                setState(() => _anoSelecionado = _anosDisponiveis[idx + 1]);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.md),
+              child: Icon(
+                Icons.chevron_left,
+                color: _anosDisponiveis.indexOf(_anoSelecionado) < _anosDisponiveis.length - 1
+                    ? AppColors.textWhite
+                    : AppColors.textMuted,
+                size: AppSizes.iconXl,
+              ),
             ),
           ),
-          const SizedBox(height: AppSizes.tableGap),
 
-          // Linhas
-          ...List.generate(_despesas.length, (i) {
-            final despesa = _despesas[i];
-            return Padding(
-              padding: EdgeInsets.only(top: i > 0 ? AppSizes.tableGap : 0),
-              child: Container(
-                height: AppSizes.tableRowHeight,
-                padding: AppSizes.tableCellPadding,
-                color: i.isOdd ? AppColors.tableRowAltBg : AppColors.tableRowBg,
-                child: Row(
-                  children: [
-                    Expanded(
-                      flex: 3,
-                      child: Text(
-                        despesa.descricao,
-                        style: AppTypography.tableRow,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        _formatarValor(despesa.valor),
-                        style: AppTypography.tableRow,
-                        textAlign: TextAlign.right,
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        despesa.data != null ? _formatarData(despesa.data!) : '-',
-                        style: AppTypography.tableRow,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
-                ),
+          // Ano
+          Text(
+            '$_anoSelecionado',
+            style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w700),
+          ),
+
+          // Seta direita
+          GestureDetector(
+            onTap: () {
+              final idx = _anosDisponiveis.indexOf(_anoSelecionado);
+              if (idx > 0) {
+                setState(() => _anoSelecionado = _anosDisponiveis[idx - 1]);
+              }
+            },
+            child: Padding(
+              padding: const EdgeInsets.all(AppSizes.md),
+              child: Icon(
+                Icons.chevron_right,
+                color: _anosDisponiveis.indexOf(_anoSelecionado) > 0
+                    ? AppColors.textWhite
+                    : AppColors.textMuted,
+                size: AppSizes.iconXl,
               ),
-            );
-          }),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildDespesasVazio() {
+  Widget _buildCardCiclo(CicloMensal ciclo) {
+    return GestureDetector(
+      onTap: () => _abrirDetalhe(ciclo),
+      child: Container(
+        width: double.infinity,
+        padding: AppSizes.cardAdminPadding,
+        decoration: BoxDecoration(
+          color: AppColors.cardAdminBg,
+          borderRadius: AppSizes.borderRadiusCardAdmin,
+          border: Border.all(color: AppColors.cardAdminBorder),
+        ),
+        child: Row(
+          children: [
+            // Ícone
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.2),
+                borderRadius: AppSizes.borderRadiusMd,
+              ),
+              child: const Icon(
+                Icons.calendar_month,
+                color: AppColors.star,
+                size: AppSizes.iconXl,
+              ),
+            ),
+
+            const SizedBox(width: AppSizes.xl),
+
+            // Info
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _nomeCiclo(ciclo),
+                    style: AppTypography.bodyMedium.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: AppSizes.sm),
+                  Text(
+                    '${_formatarData(ciclo.dataInicial)} — ${_formatarData(ciclo.dataFinal)}',
+                    style: AppTypography.labelSmall.copyWith(color: AppColors.textMuted),
+                  ),
+                  const SizedBox(height: AppSizes.xs),
+                  Text(
+                    '${ciclo.qtdPartidas} partida${ciclo.qtdPartidas != 1 ? 's' : ''}',
+                    style: AppTypography.labelSmall.copyWith(color: AppColors.textMuted),
+                  ),
+                ],
+              ),
+            ),
+
+            // Seta
+            const Icon(
+              Icons.chevron_right,
+              color: AppColors.textMuted,
+              size: AppSizes.iconXl,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCiclosVazio() {
     return Center(
       child: Column(
         children: [
-          const SizedBox(height: AppSizes.xl),
-          const Icon(Icons.receipt_long_outlined, color: AppColors.textMuted, size: 48),
+          const SizedBox(height: AppSizes.xxxl),
+          const Icon(Icons.event_busy, color: AppColors.textMuted, size: 48),
           const SizedBox(height: AppSizes.md),
           Text(
-            'Nenhuma despesa registrada',
+            'Nenhum ciclo em $_anoSelecionado',
             style: AppTypography.bodySmall,
           ),
         ],
