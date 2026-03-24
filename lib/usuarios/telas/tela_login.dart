@@ -72,7 +72,7 @@ class _TelaLoginState extends State<TelaLogin> {
 
                 // Logo
                 Image.asset(
-                  'images/baderna_icon.jpeg',
+                  'images/baderna-ico-sembg.png',
                   width: 250,
                   height: 260,
                   errorBuilder: (_, _, _) => Container(

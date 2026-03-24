@@ -58,6 +58,10 @@ abstract final class AppSizes {
   static const double avatarSm = 34;
   static const double avatarLg = 36;
   static const double avatarXl = 80;
+  static const double avatarPerfil = 100;
+
+  // Perfil jogador (carta)
+  static const double starPerfil = 28;
 
   // Menu
   static const EdgeInsets menuItemPadding = EdgeInsets.all(16);

@@ -6,6 +6,9 @@ class Jogador {
   final int? nota;
   final bool mensalista;
   final bool pago;
+  final String? fotoUrl;
+  final String? codigoVincular;
+  final String? usuarioId;
 
   const Jogador({
     required this.id,
@@ -15,9 +18,32 @@ class Jogador {
     this.nota,
     this.mensalista = false,
     this.pago = false,
+    this.fotoUrl,
+    this.codigoVincular,
+    this.usuarioId,
   });
 
   String get nomeExibicao => apelido ?? nome;
+
+  bool get vinculado => usuarioId != null;
+
+  static String? _stringOuNull(String? valor) {
+    if (valor == null || valor.isEmpty) return null;
+    return valor;
+  }
+
+  static String? _extrairFotoUrl(dynamic usuario) {
+    if (usuario == null) return null;
+    if (usuario is Map) return _stringOuNull(usuario['fotoUrl'] as String?);
+    return null;
+  }
+
+  static String? _extrairUsuarioId(dynamic usuario) {
+    if (usuario == null) return null;
+    if (usuario is String) return usuario;
+    if (usuario is Map) return usuario['_id'] as String?;
+    return null;
+  }
 
   factory Jogador.fromJson(Map<String, dynamic> json) {
     return Jogador(
@@ -25,6 +51,9 @@ class Jogador {
       nome: json['nome'] as String,
       apelido: json['apelido'] as String?,
       nivel: (json['nivel'] as num?)?.toInt() ?? 1,
+      fotoUrl: _extrairFotoUrl(json['usuario']),
+      codigoVincular: json['codigoVincular'] as String?,
+      usuarioId: _extrairUsuarioId(json['usuario']),
     );
   }
 
@@ -38,6 +67,9 @@ class Jogador {
       nota: (json['nota'] as num?)?.toInt(),
       mensalista: json['mensalista'] as bool? ?? false,
       pago: json['pago'] as bool? ?? false,
+      fotoUrl: _extrairFotoUrl(jogadorData['usuario']),
+      codigoVincular: jogadorData['codigoVincular'] as String?,
+      usuarioId: _extrairUsuarioId(jogadorData['usuario']),
     );
   }
 }

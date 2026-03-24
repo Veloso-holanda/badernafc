@@ -78,7 +78,7 @@ class _TelaSplashState extends State<TelaSplash>
             child: child,
           ),
           child: Image.asset(
-            'images/baderna_icon.jpeg',
+            'images/baderna-ico-sembg.png',
             width: 300,
             fit: BoxFit.contain,
           ),

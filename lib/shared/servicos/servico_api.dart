@@ -22,8 +22,8 @@ class ServicoApi {
   static Future<Usuario> criarUsuario({
     required String nome,
     required String email,
-    String? apelido,
     String? telefone,
+    String? codigoVincular,
   }) async {
     final resposta = await http.post(
       Uri.parse('${Api.baseUrl}/usuarios'),
@@ -31,8 +31,8 @@ class ServicoApi {
       body: jsonEncode({
         'nome': nome,
         'email': email,
-        if (apelido != null && apelido.isNotEmpty) 'apelido': apelido,
         if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
+        if (codigoVincular != null && codigoVincular.isNotEmpty) 'codigoVincular': codigoVincular,
       }),
     );
     if (resposta.statusCode != 200 && resposta.statusCode != 201) {
@@ -52,6 +52,26 @@ class ServicoApi {
     return Usuario.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
+  static Future<Usuario> atualizarMeuPerfil({
+    String? nome,
+    String? fotoUrl,
+    String? telefone,
+  }) async {
+    final resposta = await http.put(
+      Uri.parse('${Api.baseUrl}/usuarios/eu'),
+      headers: await _headers(),
+      body: jsonEncode({
+        if (nome != null) 'nome': nome,
+        if (fotoUrl != null) 'fotoUrl': fotoUrl,
+        if (telefone != null) 'telefone': telefone,
+      }),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao atualizar perfil: ${resposta.body}');
+    }
+    return Usuario.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
+  }
+
   // Jogadores
   static Future<List<Jogador>> obterTodosJogadores() async {
     final resposta = await http.get(
@@ -65,6 +85,26 @@ class ServicoApi {
     return lista
         .map((j) => Jogador.fromJson(j as Map<String, dynamic>))
         .toList();
+  }
+
+  static Future<Jogador> atualizarJogador(String jogadorId, {
+    String? nome,
+    String? apelido,
+    int? nivel,
+  }) async {
+    final resposta = await http.put(
+      Uri.parse('${Api.baseUrl}/jogadores/$jogadorId'),
+      headers: await _headers(),
+      body: jsonEncode({
+        if (nome != null) 'nome': nome,
+        if (apelido != null) 'apelido': apelido,
+        if (nivel != null) 'nivel': nivel,
+      }),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao atualizar jogador: ${resposta.body}');
+    }
+    return Jogador.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
   static Future<Jogador> criarJogador({
@@ -85,6 +125,17 @@ class ServicoApi {
       throw Exception('Erro ao criar jogador: ${resposta.body}');
     }
     return Jogador.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
+  }
+
+  static Future<void> vincularJogador({required String codigoVincular}) async {
+    final resposta = await http.post(
+      Uri.parse('${Api.baseUrl}/jogadores/vincular'),
+      headers: await _headers(),
+      body: jsonEncode({'codigoVincular': codigoVincular}),
+    );
+    if (resposta.statusCode != 200 && resposta.statusCode != 201) {
+      throw Exception('Erro ao vincular jogador: ${resposta.body}');
+    }
   }
 
   // Ciclos Mensais

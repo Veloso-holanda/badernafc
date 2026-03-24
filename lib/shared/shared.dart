@@ -12,6 +12,7 @@ export 'widgets/navbar.dart';
 // Telas compartilhadas
 export 'telas/tela_splash.dart';
 export 'telas/tela_config.dart';
+export 'telas/tela_perfil_jogador.dart';
 
 // Modelos
 export 'modelos/jogador.dart';

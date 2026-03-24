@@ -118,7 +118,10 @@ class _TelaHomeState extends State<TelaHome> {
       case 0:
         return _buildHome();
       case 2:
-        return TelaJogadores(ehAdmin: _usuario?.ehAdmin ?? false);
+        return TelaJogadores(
+          ehAdmin: _usuario?.ehAdmin ?? false,
+          usuarioJaVinculado: _usuario?.temJogadorVinculado ?? false,
+        );
       case 3:
         if (_carregando) {
           return const Center(
@@ -151,6 +154,23 @@ class _TelaHomeState extends State<TelaHome> {
           ),
         );
     }
+  }
+
+  void _abrirFotoDialog(String url) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(32),
+        child: GestureDetector(
+          onTap: () => Navigator.pop(ctx),
+          child: ClipRRect(
+            borderRadius: AppSizes.borderRadiusCardAdmin,
+            child: Image.network(url, fit: BoxFit.contain),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildHome() {
@@ -206,13 +226,25 @@ class _TelaHomeState extends State<TelaHome> {
                         style: AppTypography.titleMedium,
                       ),
                     ),
-                    CircleAvatar(
-                      radius: AppSizes.avatarLg / 2,
-                      backgroundColor: AppColors.tableHeaderBg,
-                      child: const Icon(
-                        Icons.person,
-                        color: AppColors.textWhite,
-                        size: AppSizes.iconMd,
+                    GestureDetector(
+                      onTap: _usuario?.fotoPerfilUrl != null
+                          ? () => _abrirFotoDialog(_usuario!.fotoPerfilUrl!)
+                          : null,
+                      child: CircleAvatar(
+                        radius: AppSizes.avatarLg / 2,
+                        backgroundColor: AppColors.tableHeaderBg,
+                        backgroundImage: _usuario?.fotoPerfilUrl != null
+                            ? NetworkImage(_usuario!.fotoPerfilUrl!)
+                            : null,
+                        child: _usuario?.fotoPerfilUrl == null
+                            ? Text(
+                                _usuario?.iniciais ?? '?',
+                                style: AppTypography.bodyMedium.copyWith(
+                                  color: AppColors.star,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              )
+                            : null,
                       ),
                     ),
                   ],

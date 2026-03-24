@@ -81,7 +81,7 @@ class _TelaCadastroJogadorState extends State<TelaCadastroJogador> {
             child: Opacity(
               opacity: AppSizes.bgImageOpacidade,
               child: Image.asset(
-                'images/baderna_icon_pb.jpeg',
+                'images/baderna-ico-sembg.png',
                 fit: BoxFit.contain,
               ),
             ),

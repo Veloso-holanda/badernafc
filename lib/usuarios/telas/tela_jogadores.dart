@@ -4,8 +4,9 @@ import '../../admin/telas/tela_cadastro_jogador.dart';
 
 class TelaJogadores extends StatefulWidget {
   final bool ehAdmin;
+  final bool usuarioJaVinculado;
 
-  const TelaJogadores({super.key, this.ehAdmin = false});
+  const TelaJogadores({super.key, this.ehAdmin = false, this.usuarioJaVinculado = false});
 
   @override
   State<TelaJogadores> createState() => _TelaJogadoresState();
@@ -81,63 +82,21 @@ class _TelaJogadoresState extends State<TelaJogadores> {
     return 'R\$ ${valor.toStringAsFixed(2).replaceAll('.', ',')}';
   }
 
-  Future<void> _mostrarDialogMensalista(Jogador jogador) async {
-    if (_ciclo == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Nenhum ciclo ativo para gerenciar mensalistas')),
-      );
-      return;
-    }
-
-    final ehMensalista = _mensalistas.any((m) => m.id == jogador.id);
-
-    final confirmou = await showDialog<bool>(
-      context: context,
-      builder: (ctx) {
-        return AlertDialog(
-          backgroundColor: AppColors.background,
-          shape: RoundedRectangleBorder(borderRadius: AppSizes.borderRadiusCardAdmin),
-          title: Text(jogador.nomeExibicao, style: AppTypography.titleMedium),
-          content: Text(
-            ehMensalista
-                ? 'Remover ${jogador.nomeExibicao} dos mensalistas do ciclo atual?'
-                : 'Adicionar ${jogador.nomeExibicao} como mensalista do ciclo atual?',
-            style: AppTypography.bodyMedium,
-          ),
-          actions: [
-            TextButton(
-              style: AppButtons.text,
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancelar'),
-            ),
-            ElevatedButton(
-              style: AppButtons.primaryForm,
-              onPressed: () => Navigator.pop(ctx, true),
-              child: Text(ehMensalista ? 'Remover' : 'Adicionar'),
-            ),
-          ],
-        );
-      },
+  Future<void> _abrirPerfilJogador(Jogador jogador) async {
+    final resultado = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => TelaPerfilJogador(
+          jogador: jogador,
+          ehAdmin: widget.ehAdmin,
+          ciclo: _ciclo,
+          mensalistas: _mensalistas,
+          usuarioJaVinculado: widget.usuarioJaVinculado,
+        ),
+      ),
     );
-
-    if (confirmou != true || !mounted) return;
-
-    try {
-      final idsAtuais = _mensalistas.map((m) => m.id).toList();
-      if (ehMensalista) {
-        idsAtuais.remove(jogador.id);
-      } else {
-        idsAtuais.add(jogador.id);
-      }
-
-      await ServicoApi.atualizarCicloMensal(_ciclo!.id, mensalistas: idsAtuais);
-      if (!mounted) return;
+    if (resultado == true) {
       _carregarDados();
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao atualizar mensalistas: $e')),
-      );
     }
   }
 
@@ -401,7 +360,7 @@ class _TelaJogadoresState extends State<TelaJogadores> {
     final ehMensalista = _mensalistas.any((m) => m.id == jogador.id);
 
     return GestureDetector(
-      onTap: widget.ehAdmin ? () => _mostrarDialogMensalista(jogador) : null,
+      onTap: () => _abrirPerfilJogador(jogador),
       child: Container(
         height: AppSizes.tableRowHeight,
         padding: AppSizes.tableCellPadding,

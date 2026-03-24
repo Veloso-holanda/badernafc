@@ -1,14 +1,102 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import '../shared.dart';
 import '../../usuarios/telas/tela_login.dart';
 import '../../admin/telas/tela_cadastro_mensal.dart';
 import '../../admin/telas/tela_configuracoes_gerais.dart';
 import '../../admin/telas/tela_financeiro.dart';
 
-class TelaConfig extends StatelessWidget {
+class TelaConfig extends StatefulWidget {
   final Usuario usuario;
 
   const TelaConfig({super.key, required this.usuario});
+
+  @override
+  State<TelaConfig> createState() => _TelaConfigState();
+}
+
+class _TelaConfigState extends State<TelaConfig> {
+  late String? _fotoUrl;
+  bool _enviandoFoto = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fotoUrl = widget.usuario.fotoPerfilUrl;
+  }
+
+  @override
+  void didUpdateWidget(TelaConfig oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.usuario.id != widget.usuario.id) {
+      _fotoUrl = widget.usuario.fotoPerfilUrl;
+    }
+  }
+
+  void _abrirFotoDialog(String url) {
+    showDialog(
+      context: context,
+      builder: (ctx) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.all(32),
+        child: GestureDetector(
+          onTap: () => Navigator.pop(ctx),
+          child: ClipRRect(
+            borderRadius: AppSizes.borderRadiusCardAdmin,
+            child: Image.network(url, fit: BoxFit.contain),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _selecionarFoto() async {
+    final picker = ImagePicker();
+    final imagem = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 80,
+    );
+
+    if (imagem == null || !mounted) return;
+
+    setState(() => _enviandoFoto = true);
+
+    try {
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('avatars')
+          .child('${widget.usuario.id}.jpg');
+
+      await ref.putFile(
+        File(imagem.path),
+        SettableMetadata(contentType: 'image/jpeg'),
+      );
+
+      final url = await ref.getDownloadURL();
+
+      await ServicoApi.atualizarMeuPerfil(fotoUrl: url);
+
+      if (!mounted) return;
+      setState(() {
+        _fotoUrl = url;
+        _enviandoFoto = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Foto atualizada!')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _enviandoFoto = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao atualizar foto: $e')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -29,22 +117,41 @@ class TelaConfig extends StatelessWidget {
   Widget _buildPerfilSection() {
     return Column(
       children: [
-        // Avatar
-        CircleAvatar(
-          radius: AppSizes.avatarXl / 2,
-          backgroundColor: AppColors.tableHeaderBg,
-          child: const Icon(
-            Icons.person,
-            color: AppColors.textMuted,
-            size: AppSizes.avatarLg,
-          ),
+        // Avatar com ícone de câmera
+        Stack(
+          children: [
+            GestureDetector(
+              onTap: _fotoUrl != null ? () => _abrirFotoDialog(_fotoUrl!) : null,
+              child: _buildAvatar(),
+            ),
+            Positioned(
+              bottom: 0,
+              right: 0,
+              child: GestureDetector(
+                onTap: _enviandoFoto ? null : _selecionarFoto,
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.background, width: 2),
+                  ),
+                  child: Icon(
+                    _enviandoFoto ? Icons.hourglass_top : Icons.camera_alt,
+                    color: AppColors.textWhite,
+                    size: AppSizes.iconSm,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
 
         const SizedBox(height: AppSizes.lg),
 
         // Nome
         Text(
-          usuario.nomeExibicao,
+          widget.usuario.nomeExibicao,
           style: AppTypography.titleLarge,
         ),
 
@@ -52,7 +159,7 @@ class TelaConfig extends StatelessWidget {
 
         // Email
         Text(
-          usuario.email,
+          widget.usuario.email,
           style: AppTypography.labelSmall.copyWith(
             color: AppColors.textMuted,
           ),
@@ -61,8 +168,44 @@ class TelaConfig extends StatelessWidget {
         const SizedBox(height: AppSizes.md),
 
         // Badge
-        if (usuario.ehAdmin) _buildBadgeAdmin() else _buildBadgeNivel(),
+        if (widget.usuario.ehAdmin) _buildBadgeAdmin() else _buildBadgeNivel(),
       ],
+    );
+  }
+
+  Widget _buildAvatar() {
+    if (_enviandoFoto) {
+      return CircleAvatar(
+        radius: AppSizes.avatarXl / 2,
+        backgroundColor: AppColors.tableHeaderBg,
+        child: const SizedBox(
+          width: 24,
+          height: 24,
+          child: CircularProgressIndicator(
+            color: AppColors.star,
+            strokeWidth: 2,
+          ),
+        ),
+      );
+    }
+
+    if (_fotoUrl != null) {
+      return CircleAvatar(
+        radius: AppSizes.avatarXl / 2,
+        backgroundColor: AppColors.tableHeaderBg,
+        backgroundImage: NetworkImage(_fotoUrl!),
+      );
+    }
+
+    return CircleAvatar(
+      radius: AppSizes.avatarXl / 2,
+      backgroundColor: AppColors.tableHeaderBg,
+      child: Text(
+        widget.usuario.iniciais,
+        style: AppTypography.headerTitle.copyWith(
+          color: AppColors.star,
+        ),
+      ),
     );
   }
 
@@ -96,6 +239,7 @@ class TelaConfig extends StatelessWidget {
   }
 
   Widget _buildBadgeNivel() {
+    final nivel = widget.usuario.jogador?.nivel ?? 1;
     return Container(
       padding: AppSizes.badgePadding,
       decoration: BoxDecoration(
@@ -105,13 +249,17 @@ class TelaConfig extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '★' * 5,
-            style: AppTypography.starRating,
-          ),
+          ...List.generate(5, (i) {
+            return Text(
+              '\u2605',
+              style: AppTypography.starRating.copyWith(
+                color: i < nivel ? AppColors.star : AppColors.starInactive,
+              ),
+            );
+          }),
           const SizedBox(width: AppSizes.sm),
           Text(
-            'Nível 5',
+            'Nivel $nivel',
             style: AppTypography.labelSmall.copyWith(
               color: AppColors.star,
               fontWeight: FontWeight.w500,
@@ -124,11 +272,11 @@ class TelaConfig extends StatelessWidget {
   }
 
   Widget _buildMenuSection(BuildContext context) {
-    final itens = usuario.ehAdmin
+    final itens = widget.usuario.ehAdmin
         ? [
             _ItemMenu(
               icone: Icons.tune,
-              label: 'Configurações Gerais',
+              label: 'Configuracoes Gerais',
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const TelaConfiguracoesGerais()),
@@ -144,7 +292,7 @@ class TelaConfig extends StatelessWidget {
             ),
             _ItemMenu(
               icone: Icons.account_balance_wallet,
-              label: 'Finanças',
+              label: 'Financas',
               onTap: () => Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const TelaFinanceiro()),
@@ -159,7 +307,7 @@ class TelaConfig extends StatelessWidget {
             ),
             _ItemMenu(
               icone: Icons.notifications_outlined,
-              label: 'Notificações',
+              label: 'Notificacoes',
               onTap: () => _mostrarEmBreve(context),
             ),
           ];
