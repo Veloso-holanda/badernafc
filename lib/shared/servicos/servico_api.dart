@@ -9,6 +9,8 @@ import '../modelos/ciclo_mensal.dart';
 import '../modelos/configuracoes_gerais.dart';
 import '../modelos/despesa.dart';
 import '../modelos/resumo_financeiro.dart';
+import '../modelos/time.dart';
+import '../modelos/membro.dart';
 import 'servico_auth.dart';
 
 class ServicoApi {
@@ -18,12 +20,12 @@ class ServicoApi {
     return Api.authHeaders(token);
   }
 
-  // Usuarios
+  // ─── Usuarios ───────────────────────────────────────────────────────────────
+
   static Future<Usuario> criarUsuario({
     required String nome,
     required String email,
     String? telefone,
-    String? codigoVincular,
   }) async {
     final resposta = await http.post(
       Uri.parse('${Api.baseUrl}/usuarios'),
@@ -32,7 +34,6 @@ class ServicoApi {
         'nome': nome,
         'email': email,
         if (telefone != null && telefone.isNotEmpty) 'telefone': telefone,
-        if (codigoVincular != null && codigoVincular.isNotEmpty) 'codigoVincular': codigoVincular,
       }),
     );
     if (resposta.statusCode != 200 && resposta.statusCode != 201) {
@@ -72,10 +73,116 @@ class ServicoApi {
     return Usuario.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  // Jogadores
-  static Future<List<Jogador>> obterTodosJogadores() async {
+  // ─── Times ──────────────────────────────────────────────────────────────────
+
+  static Future<List<Map<String, dynamic>>> buscarMeusTimes() async {
     final resposta = await http.get(
-      Uri.parse('${Api.baseUrl}/jogadores'),
+      Uri.parse('${Api.baseUrl}/times'),
+      headers: await _headers(),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao buscar times: ${resposta.statusCode}');
+    }
+    final lista = jsonDecode(resposta.body) as List;
+    return lista.cast<Map<String, dynamic>>();
+  }
+
+  static Future<Time> criarTime(String nome, {String? descricao, String? logoUrl}) async {
+    final resposta = await http.post(
+      Uri.parse('${Api.baseUrl}/times'),
+      headers: await _headers(),
+      body: jsonEncode({
+        'nome': nome,
+        if (descricao != null && descricao.isNotEmpty) 'descricao': descricao,
+        if (logoUrl != null && logoUrl.isNotEmpty) 'logoUrl': logoUrl,
+      }),
+    );
+    if (resposta.statusCode != 200 && resposta.statusCode != 201) {
+      throw Exception('Erro ao criar time: ${resposta.body}');
+    }
+    return Time.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
+  }
+
+  static Future<Membro> entrarNoTime(String codigoConvite) async {
+    final resposta = await http.post(
+      Uri.parse('${Api.baseUrl}/times/entrar'),
+      headers: await _headers(),
+      body: jsonEncode({'codigoConvite': codigoConvite}),
+    );
+    if (resposta.statusCode != 200 && resposta.statusCode != 201) {
+      throw Exception('Erro ao entrar no time: ${resposta.body}');
+    }
+    return Membro.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
+  }
+
+  static Future<Time> buscarTime(String timeId) async {
+    final resposta = await http.get(
+      Uri.parse('${Api.baseUrl}/times/$timeId'),
+      headers: await _headers(),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao buscar time: ${resposta.statusCode}');
+    }
+    return Time.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
+  }
+
+  static Future<Time> atualizarTime(String timeId, {String? nome, String? descricao, String? logoUrl}) async {
+    final resposta = await http.put(
+      Uri.parse('${Api.baseUrl}/times/$timeId'),
+      headers: await _headers(),
+      body: jsonEncode({
+        if (nome != null) 'nome': nome,
+        if (descricao != null) 'descricao': descricao,
+        if (logoUrl != null) 'logoUrl': logoUrl,
+      }),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao atualizar time: ${resposta.body}');
+    }
+    return Time.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
+  }
+
+  static Future<List<Membro>> buscarMembros(String timeId) async {
+    final resposta = await http.get(
+      Uri.parse('${Api.baseUrl}/times/$timeId/membros'),
+      headers: await _headers(),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao buscar membros: ${resposta.statusCode}');
+    }
+    final lista = jsonDecode(resposta.body) as List;
+    return lista
+        .map((m) => Membro.fromJson(m as Map<String, dynamic>))
+        .toList();
+  }
+
+  static Future<Membro> atualizarPapelMembro(String timeId, String membroId, String papel) async {
+    final resposta = await http.put(
+      Uri.parse('${Api.baseUrl}/times/$timeId/membros/$membroId'),
+      headers: await _headers(),
+      body: jsonEncode({'papel': papel}),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao atualizar membro: ${resposta.body}');
+    }
+    return Membro.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
+  }
+
+  static Future<void> removerMembro(String timeId, String membroId) async {
+    final resposta = await http.delete(
+      Uri.parse('${Api.baseUrl}/times/$timeId/membros/$membroId'),
+      headers: await _headers(),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao remover membro: ${resposta.statusCode}');
+    }
+  }
+
+  // ─── Jogadores (scoped por time) ────────────────────────────────────────────
+
+  static Future<List<Jogador>> obterTodosJogadores(String timeId) async {
+    final resposta = await http.get(
+      Uri.parse('${Api.baseUrl}/times/$timeId/jogadores'),
       headers: await _headers(),
     );
     if (resposta.statusCode != 200) {
@@ -87,18 +194,20 @@ class ServicoApi {
         .toList();
   }
 
-  static Future<Jogador> atualizarJogador(String jogadorId, {
+  static Future<Jogador> atualizarJogador(String timeId, String jogadorId, {
     String? nome,
     String? apelido,
     int? nivel,
+    bool? ehGoleiro,
   }) async {
     final resposta = await http.put(
-      Uri.parse('${Api.baseUrl}/jogadores/$jogadorId'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/jogadores/$jogadorId'),
       headers: await _headers(),
       body: jsonEncode({
         if (nome != null) 'nome': nome,
         if (apelido != null) 'apelido': apelido,
         if (nivel != null) 'nivel': nivel,
+        if (ehGoleiro != null) 'ehGoleiro': ehGoleiro,
       }),
     );
     if (resposta.statusCode != 200) {
@@ -107,18 +216,20 @@ class ServicoApi {
     return Jogador.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  static Future<Jogador> criarJogador({
+  static Future<Jogador> criarJogador(String timeId, {
     required String nome,
     String? apelido,
     required int nivel,
+    bool ehGoleiro = false,
   }) async {
     final resposta = await http.post(
-      Uri.parse('${Api.baseUrl}/jogadores'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/jogadores'),
       headers: await _headers(),
       body: jsonEncode({
         'nome': nome,
         if (apelido != null && apelido.isNotEmpty) 'apelido': apelido,
         'nivel': nivel,
+        'ehGoleiro': ehGoleiro,
       }),
     );
     if (resposta.statusCode != 200 && resposta.statusCode != 201) {
@@ -127,9 +238,9 @@ class ServicoApi {
     return Jogador.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  static Future<void> vincularJogador({required String codigoVincular}) async {
+  static Future<void> vincularJogador(String timeId, {required String codigoVincular}) async {
     final resposta = await http.post(
-      Uri.parse('${Api.baseUrl}/jogadores/vincular'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/jogadores/vincular'),
       headers: await _headers(),
       body: jsonEncode({'codigoVincular': codigoVincular}),
     );
@@ -138,13 +249,14 @@ class ServicoApi {
     }
   }
 
-  // Ciclos Mensais
-  static Future<CicloMensal> criarCicloMensal({
+  // ─── Ciclos Mensais (scoped por time) ───────────────────────────────────────
+
+  static Future<CicloMensal> criarCicloMensal(String timeId, {
     required DateTime dataInicial,
     List<String>? mensalistas,
   }) async {
     final resposta = await http.post(
-      Uri.parse('${Api.baseUrl}/ciclos-mensais'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/ciclos-mensais'),
       headers: await _headers(),
       body: jsonEncode({
         'dataInicial': dataInicial.toIso8601String().split('T').first,
@@ -157,9 +269,9 @@ class ServicoApi {
     return CicloMensal.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  static Future<List<CicloMensal>> obterTodosCiclos() async {
+  static Future<List<CicloMensal>> obterTodosCiclos(String timeId) async {
     final resposta = await http.get(
-      Uri.parse('${Api.baseUrl}/ciclos-mensais'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/ciclos-mensais'),
       headers: await _headers(),
     );
     if (resposta.statusCode != 200) {
@@ -171,9 +283,9 @@ class ServicoApi {
         .toList();
   }
 
-  static Future<CicloMensal?> obterCicloAtual() async {
+  static Future<CicloMensal?> obterCicloAtual(String timeId) async {
     final resposta = await http.get(
-      Uri.parse('${Api.baseUrl}/ciclos-mensais/atual'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/ciclos-mensais/atual'),
       headers: await _headers(),
     );
     if (resposta.statusCode == 404) return null;
@@ -183,11 +295,11 @@ class ServicoApi {
     return CicloMensal.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  static Future<CicloMensal> atualizarCicloMensal(String cicloId, {
+  static Future<CicloMensal> atualizarCicloMensal(String timeId, String cicloId, {
     List<String>? mensalistas,
   }) async {
     final resposta = await http.put(
-      Uri.parse('${Api.baseUrl}/ciclos-mensais/$cicloId'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/ciclos-mensais/$cicloId'),
       headers: await _headers(),
       body: jsonEncode({
         if (mensalistas != null) 'mensalistas': mensalistas,
@@ -199,13 +311,14 @@ class ServicoApi {
     return CicloMensal.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  // Partidas
-  static Future<List<Partida>> obterPartidasDoCiclo(String cicloId) async {
+  // ─── Partidas (scoped por time) ─────────────────────────────────────────────
+
+  static Future<List<Partida>> obterPartidasDoCiclo(String timeId, String cicloId) async {
     final resposta = await http.get(
-      Uri.parse('${Api.baseUrl}/partidas/ciclo/$cicloId'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/partidas/ciclo/$cicloId'),
       headers: await _headers(),
     );
-    debugPrint('[API] GET /partidas/ciclo/$cicloId → ${resposta.statusCode}');
+    debugPrint('[API] GET /times/$timeId/partidas/ciclo/$cicloId → ${resposta.statusCode}');
     debugPrint('[API] body: ${resposta.body.substring(0, resposta.body.length.clamp(0, 500))}');
     if (resposta.statusCode != 200) {
       throw Exception('Erro ao buscar partidas: ${resposta.statusCode}');
@@ -216,9 +329,9 @@ class ServicoApi {
         .toList();
   }
 
-  static Future<Partida> obterPartida(String partidaId) async {
+  static Future<Partida> obterPartida(String timeId, String partidaId) async {
     final resposta = await http.get(
-      Uri.parse('${Api.baseUrl}/partidas/$partidaId'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/partidas/$partidaId'),
       headers: await _headers(),
     );
     if (resposta.statusCode != 200) {
@@ -227,9 +340,9 @@ class ServicoApi {
     return Partida.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  static Future<void> confirmarPresenca(String partidaId, String jogadorId) async {
+  static Future<void> confirmarPresenca(String timeId, String partidaId, String jogadorId) async {
     final resposta = await http.post(
-      Uri.parse('${Api.baseUrl}/partidas/$partidaId/confirmar'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/partidas/$partidaId/confirmar'),
       headers: await _headers(),
       body: jsonEncode({'jogadorId': jogadorId}),
     );
@@ -238,9 +351,20 @@ class ServicoApi {
     }
   }
 
-  static Future<void> marcarPagamentoDiarista(String partidaId, String jogadorId, bool pago) async {
+  static Future<void> alterarNotaPartida(String timeId, String partidaId, String jogadorId, int nota) async {
     final resposta = await http.put(
-      Uri.parse('${Api.baseUrl}/partidas/$partidaId/pagamento-diarista'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/partidas/$partidaId/nota'),
+      headers: await _headers(),
+      body: jsonEncode({'jogadorId': jogadorId, 'nota': nota}),
+    );
+    if (resposta.statusCode != 200) {
+      throw Exception('Erro ao alterar nota: ${resposta.body}');
+    }
+  }
+
+  static Future<void> marcarPagamentoDiarista(String timeId, String partidaId, String jogadorId, bool pago) async {
+    final resposta = await http.put(
+      Uri.parse('${Api.baseUrl}/times/$timeId/partidas/$partidaId/pagamento-diarista'),
       headers: await _headers(),
       body: jsonEncode({'jogadorId': jogadorId, 'pago': pago}),
     );
@@ -249,8 +373,9 @@ class ServicoApi {
     }
   }
 
-  // Configurações Gerais
-  static Future<ConfiguracoesGerais> criarConfiguracoesGerais({
+  // ─── Configurações Gerais (scoped por time) ────────────────────────────────
+
+  static Future<ConfiguracoesGerais> criarConfiguracoesGerais(String timeId, {
     required double valorCicloMensal,
     required double diaria,
     required double valorMensalista,
@@ -258,7 +383,7 @@ class ServicoApi {
     required String horaFutebol,
   }) async {
     final resposta = await http.post(
-      Uri.parse('${Api.baseUrl}/configuracoes-gerais'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/configuracoes-gerais'),
       headers: await _headers(),
       body: jsonEncode({
         'valorCicloMensal': valorCicloMensal,
@@ -274,9 +399,9 @@ class ServicoApi {
     return ConfiguracoesGerais.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  static Future<ConfiguracoesGerais?> obterConfiguracoesGerais() async {
+  static Future<ConfiguracoesGerais?> obterConfiguracoesGerais(String timeId) async {
     final resposta = await http.get(
-      Uri.parse('${Api.baseUrl}/configuracoes-gerais'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/configuracoes-gerais'),
       headers: await _headers(),
     );
     if (resposta.statusCode == 404) return null;
@@ -286,7 +411,7 @@ class ServicoApi {
     return ConfiguracoesGerais.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  static Future<ConfiguracoesGerais> atualizarConfiguracoesGerais({
+  static Future<ConfiguracoesGerais> atualizarConfiguracoesGerais(String timeId, {
     double? valorCicloMensal,
     double? diaria,
     double? valorMensalista,
@@ -294,7 +419,7 @@ class ServicoApi {
     String? horaFutebol,
   }) async {
     final resposta = await http.put(
-      Uri.parse('${Api.baseUrl}/configuracoes-gerais'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/configuracoes-gerais'),
       headers: await _headers(),
       body: jsonEncode({
         if (valorCicloMensal != null) 'valorCicloMensal': valorCicloMensal,
@@ -310,15 +435,16 @@ class ServicoApi {
     return ConfiguracoesGerais.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  // Financeiro
-  static Future<Despesa> criarDespesa({
+  // ─── Financeiro (scoped por time) ───────────────────────────────────────────
+
+  static Future<Despesa> criarDespesa(String timeId, {
     required String cicloMensalId,
     required String descricao,
     required double valor,
     DateTime? data,
   }) async {
     final resposta = await http.post(
-      Uri.parse('${Api.baseUrl}/financeiro/despesas'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/financeiro/despesas'),
       headers: await _headers(),
       body: jsonEncode({
         'cicloMensalId': cicloMensalId,
@@ -333,9 +459,9 @@ class ServicoApi {
     return Despesa.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  static Future<List<Despesa>> obterDespesasDoCiclo(String cicloMensalId) async {
+  static Future<List<Despesa>> obterDespesasDoCiclo(String timeId, String cicloMensalId) async {
     final resposta = await http.get(
-      Uri.parse('${Api.baseUrl}/financeiro/despesas/ciclo/$cicloMensalId'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/financeiro/despesas/ciclo/$cicloMensalId'),
       headers: await _headers(),
     );
     if (resposta.statusCode != 200) {
@@ -347,13 +473,13 @@ class ServicoApi {
         .toList();
   }
 
-  static Future<Despesa> atualizarDespesa(String despesaId, {
+  static Future<Despesa> atualizarDespesa(String timeId, String despesaId, {
     String? descricao,
     double? valor,
     DateTime? data,
   }) async {
     final resposta = await http.put(
-      Uri.parse('${Api.baseUrl}/financeiro/despesas/$despesaId'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/financeiro/despesas/$despesaId'),
       headers: await _headers(),
       body: jsonEncode({
         if (descricao != null) 'descricao': descricao,
@@ -367,9 +493,9 @@ class ServicoApi {
     return Despesa.fromJson(jsonDecode(resposta.body) as Map<String, dynamic>);
   }
 
-  static Future<void> removerDespesa(String despesaId) async {
+  static Future<void> removerDespesa(String timeId, String despesaId) async {
     final resposta = await http.delete(
-      Uri.parse('${Api.baseUrl}/financeiro/despesas/$despesaId'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/financeiro/despesas/$despesaId'),
       headers: await _headers(),
     );
     if (resposta.statusCode != 200) {
@@ -377,9 +503,9 @@ class ServicoApi {
     }
   }
 
-  static Future<ResumoFinanceiro> obterResumoFinanceiro(String cicloMensalId) async {
+  static Future<ResumoFinanceiro> obterResumoFinanceiro(String timeId, String cicloMensalId) async {
     final resposta = await http.get(
-      Uri.parse('${Api.baseUrl}/financeiro/resumo/$cicloMensalId'),
+      Uri.parse('${Api.baseUrl}/times/$timeId/financeiro/resumo/$cicloMensalId'),
       headers: await _headers(),
     );
     if (resposta.statusCode != 200) {

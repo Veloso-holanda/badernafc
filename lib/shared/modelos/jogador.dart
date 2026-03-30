@@ -6,6 +6,7 @@ class Jogador {
   final int? nota;
   final bool mensalista;
   final bool pago;
+  final bool ehGoleiro;
   final String? fotoUrl;
   final String? codigoVincular;
   final String? usuarioId;
@@ -18,6 +19,7 @@ class Jogador {
     this.nota,
     this.mensalista = false,
     this.pago = false,
+    this.ehGoleiro = false,
     this.fotoUrl,
     this.codigoVincular,
     this.usuarioId,
@@ -47,10 +49,11 @@ class Jogador {
 
   factory Jogador.fromJson(Map<String, dynamic> json) {
     return Jogador(
-      id: json['_id'] as String,
-      nome: json['nome'] as String,
+      id: (json['_id'] as String?) ?? '',
+      nome: (json['nome'] as String?) ?? '',
       apelido: json['apelido'] as String?,
       nivel: (json['nivel'] as num?)?.toInt() ?? 1,
+      ehGoleiro: json['ehGoleiro'] as bool? ?? false,
       fotoUrl: _extrairFotoUrl(json['usuario']),
       codigoVincular: json['codigoVincular'] as String?,
       usuarioId: _extrairUsuarioId(json['usuario']),
@@ -67,6 +70,7 @@ class Jogador {
       nota: (json['nota'] as num?)?.toInt(),
       mensalista: json['mensalista'] as bool? ?? false,
       pago: json['pago'] as bool? ?? false,
+      ehGoleiro: jogadorData['ehGoleiro'] as bool? ?? false,
       fotoUrl: _extrairFotoUrl(jogadorData['usuario']),
       codigoVincular: jogadorData['codigoVincular'] as String?,
       usuarioId: _extrairUsuarioId(jogadorData['usuario']),

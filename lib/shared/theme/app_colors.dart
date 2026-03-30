@@ -47,6 +47,16 @@ abstract final class AppColors {
   static const Color formFieldBg = Color(0x1AFFFFFF);
   static const Color formFieldBorder = Color(0x33E8922E);
 
+  // Carta jogador (estilo album Copa)
+  static const Color cartaGradientClaro = Color(0xFF3D2A0F);
+  static const Color cartaGradientMedio = Color(0xFF2A1A06);
+  static const Color cartaGradientEscuro = Color(0xFF1A1208);
+  static const Color cartaSombra = Color(0x55E8922E);
+  static const Color cartaSombraLeve = Color(0x44E8922E);
+
+  // Sombras
+  static const Color shadow = Color(0x66000000);
+
   // Feedback
   static const Color success = Color(0xFF4CAF50);
   static const Color error = Color(0xFFFF5252);

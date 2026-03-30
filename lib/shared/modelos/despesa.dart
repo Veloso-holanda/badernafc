@@ -15,10 +15,10 @@ class Despesa {
 
   factory Despesa.fromJson(Map<String, dynamic> json) {
     return Despesa(
-      id: json['_id'] as String,
-      cicloMensalId: (json['cicloMensal'] ?? json['cicloMensalId']) as String,
-      descricao: json['descricao'] as String,
-      valor: (json['valor'] as num).toDouble(),
+      id: (json['_id'] as String?) ?? '',
+      cicloMensalId: ((json['cicloMensal'] ?? json['cicloMensalId']) as String?) ?? '',
+      descricao: (json['descricao'] as String?) ?? '',
+      valor: (json['valor'] as num?)?.toDouble() ?? 0,
       data: json['data'] != null ? DateTime.parse(json['data'] as String) : null,
     );
   }

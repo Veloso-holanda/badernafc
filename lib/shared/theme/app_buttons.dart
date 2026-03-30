@@ -43,7 +43,7 @@ abstract final class AppButtons {
       borderRadius: AppSizes.borderRadiusPill,
     ),
     elevation: 8,
-    shadowColor: const Color(0x66000000),
+    shadowColor: AppColors.shadow,
   );
 
   // Botão primário de formulário (radius card, sem elevation)
@@ -68,6 +68,6 @@ abstract final class AppButtons {
       borderRadius: AppSizes.borderRadiusPill,
     ),
     elevation: 8,
-    shadowColor: const Color(0x66000000),
+    shadowColor: AppColors.shadow,
   );
 }

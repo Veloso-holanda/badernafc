@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../shared.dart';
 import '../../usuarios/telas/tela_login.dart';
-import '../../usuarios/telas/tela_home.dart';
 
 class TelaSplash extends StatefulWidget {
   const TelaSplash({super.key});
@@ -51,7 +50,7 @@ class _TelaSplashState extends State<TelaSplash>
     if (!mounted) return;
 
     final destino = ServicoAuth.estaLogado
-        ? const TelaHome()
+        ? const TelaSelecaoTime()
         : const TelaLogin();
 
     Navigator.pushReplacement(
@@ -78,7 +77,7 @@ class _TelaSplashState extends State<TelaSplash>
             child: child,
           ),
           child: Image.asset(
-            'images/baderna-ico-sembg.png',
+            'images/escudo_laranja.png',
             width: 300,
             fit: BoxFit.contain,
           ),

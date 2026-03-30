@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../../shared/shared.dart';
 import 'tela_cadastro.dart';
-import 'tela_home.dart';
 
 class TelaLogin extends StatefulWidget {
   const TelaLogin({super.key});
@@ -40,7 +39,7 @@ class _TelaLoginState extends State<TelaLogin> {
 
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const TelaHome()),
+        MaterialPageRoute(builder: (_) => const TelaSelecaoTime()),
       );
     } on FirebaseAuthException catch (e) {
       if (!mounted) return;
@@ -72,7 +71,7 @@ class _TelaLoginState extends State<TelaLogin> {
 
                 // Logo
                 Image.asset(
-                  'images/baderna-ico-sembg.png',
+                  'images/escudo_laranja.png',
                   width: 250,
                   height: 260,
                   errorBuilder: (_, _, _) => Container(

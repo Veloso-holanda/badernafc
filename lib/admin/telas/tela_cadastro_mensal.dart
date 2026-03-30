@@ -32,7 +32,7 @@ class _TelaCadastroMensalState extends State<TelaCadastroMensal> {
 
   Future<void> _carregarConfig() async {
     try {
-      final config = await ServicoApi.obterConfiguracoesGerais();
+      final config = await ServicoApi.obterConfiguracoesGerais(ContextoTime.timeIdAtivo!);
       if (!mounted) return;
       setState(() {
         _config = config;
@@ -111,6 +111,7 @@ class _TelaCadastroMensalState extends State<TelaCadastroMensal> {
 
     try {
       await ServicoApi.criarCicloMensal(
+        ContextoTime.timeIdAtivo!,
         dataInicial: _dataInicial!,
       );
 
@@ -146,7 +147,7 @@ class _TelaCadastroMensalState extends State<TelaCadastroMensal> {
             child: Opacity(
               opacity: AppSizes.bgImageOpacidade,
               child: Image.asset(
-                'images/baderna-ico-sembg.png',
+                'images/escudo_preto.png',
                 fit: BoxFit.contain,
               ),
             ),

@@ -34,7 +34,7 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
     });
 
     try {
-      final ciclos = await ServicoApi.obterTodosCiclos();
+      final ciclos = await ServicoApi.obterTodosCiclos(ContextoTime.timeIdAtivo!);
 
       final anos = ciclos
           .map((c) => c.dataInicial.year)
@@ -98,7 +98,7 @@ class _TelaFinanceiroState extends State<TelaFinanceiro> {
             child: Opacity(
               opacity: AppSizes.bgImageOpacidade,
               child: Image.asset(
-                'images/baderna-ico-sembg.png',
+                'images/escudo_preto.png',
                 fit: BoxFit.contain,
               ),
             ),

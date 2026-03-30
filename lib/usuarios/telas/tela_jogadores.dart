@@ -52,10 +52,11 @@ class _TelaJogadoresState extends State<TelaJogadores> {
     });
 
     try {
+      final timeId = ContextoTime.timeIdAtivo!;
       final resultados = await Future.wait([
-        ServicoApi.obterTodosJogadores(),
-        ServicoApi.obterCicloAtual(),
-        ServicoApi.obterConfiguracoesGerais(),
+        ServicoApi.obterTodosJogadores(timeId),
+        ServicoApi.obterCicloAtual(timeId),
+        ServicoApi.obterConfiguracoesGerais(timeId),
       ]);
 
       final jogadores = resultados[0] as List<Jogador>;
@@ -529,7 +530,7 @@ class _ModalPerfilJogadorState extends State<_ModalPerfilJogador> {
         idsAtuais.add(widget.jogador.id);
       }
 
-      await ServicoApi.atualizarCicloMensal(widget.ciclo!.id, mensalistas: idsAtuais);
+      await ServicoApi.atualizarCicloMensal(ContextoTime.timeIdAtivo!, widget.ciclo!.id, mensalistas: idsAtuais);
 
       if (!mounted) return;
       setState(() {
@@ -568,7 +569,7 @@ class _ModalPerfilJogadorState extends State<_ModalPerfilJogador> {
     setState(() => _carregando = true);
 
     try {
-      await ServicoApi.vincularJogador(codigoVincular: codigo);
+      await ServicoApi.vincularJogador(ContextoTime.timeIdAtivo!, codigoVincular: codigo);
 
       if (!mounted) return;
       setState(() {
@@ -714,16 +715,16 @@ class _ModalPerfilJogadorState extends State<_ModalPerfilJogador> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF3D2A0F),
-            Color(0xFF2A1A06),
-            Color(0xFF1A1208),
+            AppColors.cartaGradientClaro,
+            AppColors.cartaGradientMedio,
+            AppColors.cartaGradientEscuro,
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.star, width: 2.5),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x55E8922E),
+            color: AppColors.cartaSombra,
             blurRadius: 24,
             spreadRadius: 4,
           ),
@@ -798,7 +799,7 @@ class _ModalPerfilJogadorState extends State<_ModalPerfilJogador> {
                       border: Border.all(color: AppColors.star, width: 3),
                       boxShadow: const [
                         BoxShadow(
-                          color: Color(0x44E8922E),
+                          color: AppColors.cartaSombraLeve,
                           blurRadius: 16,
                           spreadRadius: 2,
                         ),

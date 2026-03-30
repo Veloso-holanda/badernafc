@@ -4,6 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import '../shared.dart';
 import '../../usuarios/telas/tela_login.dart';
+import '../../usuarios/telas/tela_times.dart';
 import '../../admin/telas/tela_cadastro_mensal.dart';
 import '../../admin/telas/tela_configuracoes_gerais.dart';
 import '../../admin/telas/tela_financeiro.dart';
@@ -168,7 +169,7 @@ class _TelaConfigState extends State<TelaConfig> {
         const SizedBox(height: AppSizes.md),
 
         // Badge
-        if (widget.usuario.ehAdmin) _buildBadgeAdmin() else _buildBadgeNivel(),
+        if (ContextoTime.ehAdmin) _buildBadgeAdmin() else _buildBadgeNivel(),
       ],
     );
   }
@@ -239,7 +240,7 @@ class _TelaConfigState extends State<TelaConfig> {
   }
 
   Widget _buildBadgeNivel() {
-    final nivel = widget.usuario.jogador?.nivel ?? 1;
+    const nivel = 1; // nivel agora vem do jogador via membro, simplificado
     return Container(
       padding: AppSizes.badgePadding,
       decoration: BoxDecoration(
@@ -272,45 +273,48 @@ class _TelaConfigState extends State<TelaConfig> {
   }
 
   Widget _buildMenuSection(BuildContext context) {
-    final itens = widget.usuario.ehAdmin
-        ? [
-            _ItemMenu(
-              icone: Icons.tune,
-              label: 'Configuracoes Gerais',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TelaConfiguracoesGerais()),
-              ),
-            ),
-            _ItemMenu(
-              icone: Icons.calendar_today,
-              label: 'Mensal',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TelaCadastroMensal()),
-              ),
-            ),
-            _ItemMenu(
-              icone: Icons.account_balance_wallet,
-              label: 'Financas',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const TelaFinanceiro()),
-              ),
-            ),
-          ]
-        : [
-            _ItemMenu(
-              icone: Icons.person,
-              label: 'Perfil',
-              onTap: () => _mostrarEmBreve(context),
-            ),
-            _ItemMenu(
-              icone: Icons.notifications_outlined,
-              label: 'Notificacoes',
-              onTap: () => _mostrarEmBreve(context),
-            ),
-          ];
+    final itensComuns = [
+      _ItemMenu(
+        icone: Icons.shield_outlined,
+        label: 'Meus Times',
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const TelaTimes()),
+        ),
+      ),
+    ];
+
+    final itensAdmin = [
+      _ItemMenu(
+        icone: Icons.tune,
+        label: 'Configuracoes Gerais',
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const TelaConfiguracoesGerais()),
+        ),
+      ),
+      _ItemMenu(
+        icone: Icons.calendar_today,
+        label: 'Mensal',
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const TelaCadastroMensal()),
+        ),
+      ),
+      _ItemMenu(
+        icone: Icons.account_balance_wallet,
+        label: 'Financas',
+        onTap: () => Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const TelaFinanceiro()),
+        ),
+      ),
+    ];
+
+    final itens = [
+      ...itensComuns,
+      if (ContextoTime.ehAdmin) ...itensAdmin,
+    ];
 
     return ClipRRect(
       borderRadius: AppSizes.borderRadiusCard,
@@ -364,11 +368,6 @@ class _TelaConfigState extends State<TelaConfig> {
     );
   }
 
-  void _mostrarEmBreve(BuildContext context) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Em breve...')),
-    );
-  }
 }
 
 class _ItemMenu extends StatelessWidget {

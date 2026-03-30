@@ -41,9 +41,10 @@ class _TelaDetalheFinanceiroState extends State<TelaDetalheFinanceiro> {
     });
 
     try {
+      final timeId = ContextoTime.timeIdAtivo!;
       final resultados = await Future.wait([
-        ServicoApi.obterResumoFinanceiro(widget.ciclo.id),
-        ServicoApi.obterDespesasDoCiclo(widget.ciclo.id),
+        ServicoApi.obterResumoFinanceiro(timeId, widget.ciclo.id),
+        ServicoApi.obterDespesasDoCiclo(timeId, widget.ciclo.id),
       ]);
 
       if (!mounted) return;
@@ -226,6 +227,7 @@ class _TelaDetalheFinanceiroState extends State<TelaDetalheFinanceiro> {
 
     try {
       await ServicoApi.criarDespesa(
+        ContextoTime.timeIdAtivo!,
         cicloMensalId: widget.ciclo.id,
         descricao: descricao,
         valor: valor,
@@ -259,7 +261,7 @@ class _TelaDetalheFinanceiroState extends State<TelaDetalheFinanceiro> {
             child: Opacity(
               opacity: AppSizes.bgImageOpacidade,
               child: Image.asset(
-                'images/baderna-ico-sembg.png',
+                'images/escudo_preto.png',
                 fit: BoxFit.contain,
               ),
             ),

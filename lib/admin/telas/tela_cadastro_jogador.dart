@@ -12,6 +12,7 @@ class _TelaCadastroJogadorState extends State<TelaCadastroJogador> {
   final _nomeController = TextEditingController();
   final _apelidoController = TextEditingController();
   int _nivel = 3;
+  bool _ehGoleiro = false;
   bool _carregando = false;
 
   @override
@@ -32,11 +33,13 @@ class _TelaCadastroJogadorState extends State<TelaCadastroJogador> {
 
     try {
       await ServicoApi.criarJogador(
+        ContextoTime.timeIdAtivo!,
         nome: nome,
         apelido: _apelidoController.text.trim().isEmpty
             ? null
             : _apelidoController.text.trim(),
         nivel: _nivel,
+        ehGoleiro: _ehGoleiro,
       );
 
       if (!mounted) return;
@@ -81,7 +84,7 @@ class _TelaCadastroJogadorState extends State<TelaCadastroJogador> {
             child: Opacity(
               opacity: AppSizes.bgImageOpacidade,
               child: Image.asset(
-                'images/baderna-ico-sembg.png',
+                'images/escudo_preto.png',
                 fit: BoxFit.contain,
               ),
             ),
@@ -150,6 +153,32 @@ class _TelaCadastroJogadorState extends State<TelaCadastroJogador> {
                           ),
                         );
                       }),
+                    ),
+                  ),
+
+                  const SizedBox(height: AppSizes.formGap),
+
+                  // Goleiro
+                  Container(
+                    padding: AppSizes.fieldContentPadding,
+                    decoration: BoxDecoration(
+                      color: AppColors.inputBg,
+                      borderRadius: AppSizes.borderRadiusPill,
+                      border: Border.all(color: AppColors.inputBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.sports_handball, color: AppColors.textMuted, size: AppSizes.iconForm),
+                        const SizedBox(width: AppSizes.md),
+                        Expanded(
+                          child: Text('Goleiro', style: AppTypography.inputLabel),
+                        ),
+                        Switch(
+                          value: _ehGoleiro,
+                          onChanged: (v) => setState(() => _ehGoleiro = v),
+                          activeThumbColor: AppColors.primary,
+                        ),
+                      ],
                     ),
                   ),
 

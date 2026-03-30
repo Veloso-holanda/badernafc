@@ -46,7 +46,7 @@ class _TelaConfiguracoesGeraisState extends State<TelaConfiguracoesGerais> {
 
   Future<void> _carregarConfig() async {
     try {
-      final config = await ServicoApi.obterConfiguracoesGerais();
+      final config = await ServicoApi.obterConfiguracoesGerais(ContextoTime.timeIdAtivo!);
       if (!mounted) return;
       if (config != null) {
         _config = config;
@@ -140,6 +140,7 @@ class _TelaConfiguracoesGeraisState extends State<TelaConfiguracoesGerais> {
     try {
       if (_config == null) {
         await ServicoApi.criarConfiguracoesGerais(
+          ContextoTime.timeIdAtivo!,
           valorCicloMensal: valorCicloMensal,
           diaria: diaria,
           valorMensalista: valorMensalista,
@@ -148,6 +149,7 @@ class _TelaConfiguracoesGeraisState extends State<TelaConfiguracoesGerais> {
         );
       } else {
         await ServicoApi.atualizarConfiguracoesGerais(
+          ContextoTime.timeIdAtivo!,
           valorCicloMensal: valorCicloMensal,
           diaria: diaria,
           valorMensalista: valorMensalista,
@@ -187,140 +189,162 @@ class _TelaConfiguracoesGeraisState extends State<TelaConfiguracoesGerais> {
             child: Opacity(
               opacity: AppSizes.bgImageOpacidade,
               child: Image.asset(
-                'images/baderna-ico-sembg.png',
+                'images/escudo_preto.png',
                 fit: BoxFit.contain,
               ),
             ),
           ),
           SafeArea(
-            child: _carregando
-                ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                : SingleChildScrollView(
-                    padding: AppSizes.screenPadding,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            GestureDetector(
-                              onTap: () => Navigator.pop(context),
-                              child: const Icon(
-                                Icons.arrow_back,
-                                color: AppColors.textWhite,
-                                size: AppSizes.iconXl,
-                              ),
-                            ),
-                            const SizedBox(width: AppSizes.lg),
-                            Text('Configurações Gerais', style: AppTypography.titleMedium),
-                          ],
+            child: Column(
+              children: [
+                // Header fixo
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    AppSizes.xl, AppSizes.xl, AppSizes.xl, 0,
+                  ),
+                  child: Row(
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: const Icon(
+                          Icons.arrow_back,
+                          color: AppColors.textWhite,
+                          size: AppSizes.iconXl,
                         ),
-                        const SizedBox(height: AppSizes.sectionGap),
-                        Container(
-                          padding: AppSizes.cardAdminPadding,
-                          decoration: BoxDecoration(
-                            color: AppColors.cardAdminBg,
-                            borderRadius: AppSizes.borderRadiusCardAdmin,
-                            border: Border.all(color: AppColors.cardAdminBorder),
+                      ),
+                      const SizedBox(width: AppSizes.lg),
+                      Text('Configurações Gerais', style: AppTypography.headerTitle),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: AppSizes.sectionGap),
+
+                // Body
+                Expanded(child: _buildConteudo()),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildConteudo() {
+    if (_carregando) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: AppSizes.xl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: AppSizes.cardAdminPadding,
+            decoration: BoxDecoration(
+              color: AppColors.cardAdminBg,
+              borderRadius: AppSizes.borderRadiusCardAdmin,
+              border: Border.all(color: AppColors.cardAdminBorder),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildCampo(
+                  label: 'Dia do futebol',
+                  child: _buildCampoInput(
+                    child: DropdownButtonHideUnderline(
+                      child: DropdownButton<int>(
+                        value: _diaFutebol,
+                        isExpanded: true,
+                        dropdownColor: AppColors.background,
+                        hint: Text(
+                          'Selecionar dia',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: AppColors.inputPlaceholder,
+                            fontWeight: FontWeight.w400,
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildCampo(
-                                label: 'Dia do futebol',
-                                child: _buildCampoInput(
-                                  child: DropdownButtonHideUnderline(
-                                    child: DropdownButton<int>(
-                                      value: _diaFutebol,
-                                      isExpanded: true,
-                                      dropdownColor: AppColors.background,
-                                      hint: Text(
-                                        'Selecionar dia',
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: AppColors.inputPlaceholder,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                      icon: const Icon(Icons.expand_more, color: AppColors.star, size: AppSizes.iconForm),
-                                      style: AppTypography.bodySmall.copyWith(
-                                        color: AppColors.textWhite,
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                      items: List.generate(7, (i) {
-                                        return DropdownMenuItem(
-                                          value: i,
-                                          child: Text(_diasSemana[i]),
-                                        );
-                                      }),
-                                      onChanged: (valor) => setState(() => _diaFutebol = valor),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: AppSizes.xxl),
-                              _buildCampo(
-                                label: 'Horário',
-                                child: _buildCampoInput(
-                                  onTap: _selecionarHorario,
-                                  child: Row(
-                                    children: [
-                                      const Icon(Icons.access_time, color: AppColors.star, size: AppSizes.iconForm),
-                                      const SizedBox(width: AppSizes.md + 2),
-                                      Text(
-                                        _horaFutebol != null
-                                            ? _formatarHorario(_horaFutebol!)
-                                            : 'Selecionar horário',
-                                        style: AppTypography.bodySmall.copyWith(
-                                          color: _horaFutebol != null
-                                              ? AppColors.textWhite
-                                              : AppColors.inputPlaceholder,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: AppSizes.xxl),
-                              _buildCampoValor(
-                                label: 'Valor do ciclo mensal',
-                                controller: _valorCicloMensalController,
-                              ),
-                              const SizedBox(height: AppSizes.xxl),
-                              _buildCampoValor(
-                                label: 'Valor mensalista',
-                                controller: _valorMensalistaController,
-                              ),
-                              const SizedBox(height: AppSizes.xxl),
-                              _buildCampoValor(
-                                label: 'Valor diária',
-                                controller: _diariaController,
-                              ),
-                              const SizedBox(height: AppSizes.sectionGap),
-                              SizedBox(
-                                width: double.infinity,
-                                child: ElevatedButton.icon(
-                                  style: AppButtons.primaryForm,
-                                  onPressed: _salvando ? null : _salvar,
-                                  icon: _salvando
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                            color: AppColors.textWhite,
-                                            strokeWidth: 2,
-                                          ),
-                                        )
-                                      : const Icon(Icons.save, size: AppSizes.iconMd),
-                                  label: Text(_config == null ? 'Cadastrar' : 'Salvar'),
-                                ),
-                              ),
-                            ],
+                        ),
+                        icon: const Icon(Icons.expand_more, color: AppColors.star, size: AppSizes.iconForm),
+                        style: AppTypography.bodySmall.copyWith(
+                          color: AppColors.textWhite,
+                          fontWeight: FontWeight.w400,
+                        ),
+                        items: List.generate(7, (i) {
+                          return DropdownMenuItem(
+                            value: i,
+                            child: Text(_diasSemana[i]),
+                          );
+                        }),
+                        onChanged: (valor) => setState(() => _diaFutebol = valor),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSizes.xxl),
+                _buildCampo(
+                  label: 'Horário',
+                  child: _buildCampoInput(
+                    onTap: _selecionarHorario,
+                    child: Row(
+                      children: [
+                        const Icon(Icons.access_time, color: AppColors.star, size: AppSizes.iconForm),
+                        const SizedBox(width: AppSizes.md + 2),
+                        Text(
+                          _horaFutebol != null
+                              ? _formatarHorario(_horaFutebol!)
+                              : 'Selecionar horário',
+                          style: AppTypography.bodySmall.copyWith(
+                            color: _horaFutebol != null
+                                ? AppColors.textWhite
+                                : AppColors.inputPlaceholder,
+                            fontWeight: FontWeight.w400,
                           ),
                         ),
                       ],
                     ),
                   ),
+                ),
+                const SizedBox(height: AppSizes.xxl),
+                _buildCampoValor(
+                  label: 'Valor do ciclo mensal',
+                  controller: _valorCicloMensalController,
+                ),
+                const SizedBox(height: AppSizes.xxl),
+                _buildCampoValor(
+                  label: 'Valor mensalista',
+                  controller: _valorMensalistaController,
+                ),
+                const SizedBox(height: AppSizes.xxl),
+                _buildCampoValor(
+                  label: 'Valor diária',
+                  controller: _diariaController,
+                ),
+                const SizedBox(height: AppSizes.sectionGap),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    style: AppButtons.primaryForm,
+                    onPressed: _salvando ? null : _salvar,
+                    icon: _salvando
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: AppColors.textWhite,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Icon(Icons.save, size: AppSizes.iconMd),
+                    label: Text(_config == null ? 'Cadastrar' : 'Salvar'),
+                  ),
+                ),
+              ],
+            ),
           ),
+          const SizedBox(height: AppSizes.xxxl),
         ],
       ),
     );

@@ -46,7 +46,7 @@ class _TelaPerfilJogadorState extends State<TelaPerfilJogador> {
         idsAtuais.add(widget.jogador.id);
       }
 
-      await ServicoApi.atualizarCicloMensal(widget.ciclo!.id, mensalistas: idsAtuais);
+      await ServicoApi.atualizarCicloMensal(ContextoTime.timeIdAtivo!, widget.ciclo!.id, mensalistas: idsAtuais);
 
       if (!mounted) return;
       setState(() {
@@ -102,7 +102,7 @@ class _TelaPerfilJogadorState extends State<TelaPerfilJogador> {
     setState(() => _carregando = true);
 
     try {
-      await ServicoApi.vincularJogador(codigoVincular: codigo);
+      await ServicoApi.vincularJogador(ContextoTime.timeIdAtivo!, codigoVincular: codigo);
 
       if (!mounted) return;
       setState(() {
@@ -223,15 +223,15 @@ class _TelaPerfilJogadorState extends State<TelaPerfilJogador> {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF3D2A0F),
-            Color(0xFF1A1208),
+            AppColors.cartaGradientClaro,
+            AppColors.cartaGradientEscuro,
           ],
         ),
         borderRadius: AppSizes.borderRadiusCardAdmin,
         border: Border.all(color: AppColors.star, width: 2),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x44E8922E),
+            color: AppColors.cartaSombraLeve,
             blurRadius: 20,
             spreadRadius: 2,
           ),
@@ -250,7 +250,7 @@ class _TelaPerfilJogadorState extends State<TelaPerfilJogador> {
                 border: Border.all(color: AppColors.star, width: 3),
                 boxShadow: const [
                   BoxShadow(
-                    color: Color(0x44E8922E),
+                    color: AppColors.cartaSombraLeve,
                     blurRadius: 12,
                     spreadRadius: 2,
                   ),

@@ -13,6 +13,7 @@ export 'widgets/navbar.dart';
 export 'telas/tela_splash.dart';
 export 'telas/tela_config.dart';
 export 'telas/tela_perfil_jogador.dart';
+export 'telas/tela_selecao_time.dart';
 
 // Modelos
 export 'modelos/jogador.dart';
@@ -22,6 +23,9 @@ export 'modelos/ciclo_mensal.dart';
 export 'modelos/configuracoes_gerais.dart';
 export 'modelos/despesa.dart';
 export 'modelos/resumo_financeiro.dart';
+export 'modelos/time.dart';
+export 'modelos/membro.dart';
+export 'modelos/contexto_time.dart';
 
 // Serviços
 export 'servicos/servico_auth.dart';

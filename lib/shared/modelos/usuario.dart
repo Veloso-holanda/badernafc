@@ -1,5 +1,3 @@
-import 'jogador.dart';
-
 class Usuario {
   final String id;
   final String nome;
@@ -7,7 +5,6 @@ class Usuario {
   final String? telefone;
   final String? fotoUrl;
   final String perfil;
-  final Jogador? jogador;
 
   const Usuario({
     required this.id,
@@ -16,22 +13,14 @@ class Usuario {
     this.telefone,
     this.fotoUrl,
     required this.perfil,
-    this.jogador,
   });
 
-  String get nomeExibicao => jogador?.apelido ?? nome;
+  String get nomeExibicao => nome;
 
-  bool get ehAdmin => perfil == 'admin';
-
-  bool get temJogadorVinculado => jogador != null;
-
-  String? get jogadorVinculadoId => jogador?.id;
-
-  String? get fotoPerfilUrl => fotoUrl ?? jogador?.fotoUrl;
+  String? get fotoPerfilUrl => fotoUrl;
 
   String get iniciais {
-    final fonte = jogador?.apelido ?? nome;
-    return fonte.isNotEmpty ? fonte[0].toUpperCase() : '?';
+    return nome.isNotEmpty ? nome[0].toUpperCase() : '?';
   }
 
   static String? _stringOuNull(String? valor) {
@@ -40,7 +29,6 @@ class Usuario {
   }
 
   factory Usuario.fromJson(Map<String, dynamic> json) {
-    final jogadorData = json['jogador'];
     return Usuario(
       id: json['_id'] as String,
       nome: json['nome'] as String,
@@ -48,9 +36,6 @@ class Usuario {
       telefone: json['telefone'] as String?,
       fotoUrl: _stringOuNull(json['fotoUrl'] as String?),
       perfil: json['perfil'] as String? ?? 'usuario',
-      jogador: jogadorData is Map<String, dynamic>
-          ? Jogador.fromJson(jogadorData)
-          : null,
     );
   }
 }

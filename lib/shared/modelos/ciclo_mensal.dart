@@ -18,9 +18,9 @@ class CicloMensal {
   factory CicloMensal.fromJson(Map<String, dynamic> json) {
     final mensalistasJson = json['mensalistas'] as List? ?? [];
     return CicloMensal(
-      id: json['_id'] as String,
-      dataInicial: DateTime.parse(json['dataInicial'] as String),
-      dataFinal: DateTime.parse(json['dataFinal'] as String),
+      id: (json['_id'] as String?) ?? '',
+      dataInicial: DateTime.parse((json['dataInicial'] as String?) ?? DateTime.now().toIso8601String()),
+      dataFinal: DateTime.parse((json['dataFinal'] as String?) ?? DateTime.now().toIso8601String()),
       qtdPartidas: (json['quantidadePartidas'] as num?)?.toInt() ?? 0,
       mensalistas: mensalistasJson
           .whereType<Map<String, dynamic>>()

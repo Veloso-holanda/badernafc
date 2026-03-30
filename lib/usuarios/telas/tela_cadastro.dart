@@ -13,7 +13,6 @@ class TelaCadastro extends StatefulWidget {
 class _TelaCadastroState extends State<TelaCadastro> {
   final _formKey = GlobalKey<FormState>();
   final _nomeController = TextEditingController();
-  final _codigoVinculacaoController = TextEditingController();
   final _emailController = TextEditingController();
   final _telefoneController = TextEditingController();
   final _senhaController = TextEditingController();
@@ -25,7 +24,6 @@ class _TelaCadastroState extends State<TelaCadastro> {
   @override
   void dispose() {
     _nomeController.dispose();
-    _codigoVinculacaoController.dispose();
     _emailController.dispose();
     _telefoneController.dispose();
     _senhaController.dispose();
@@ -44,14 +42,12 @@ class _TelaCadastroState extends State<TelaCadastro> {
         senha: _senhaController.text,
       );
 
-      // Registra o usuário no backend (vinculação acontece na API se código fornecido)
+      // Registra o usuário no backend
       try {
-        final codigoVinculacao = _codigoVinculacaoController.text.trim();
         await ServicoApi.criarUsuario(
           nome: _nomeController.text.trim(),
           email: _emailController.text.trim(),
           telefone: _telefoneController.text.trim(),
-          codigoVincular: codigoVinculacao.isNotEmpty ? codigoVinculacao : null,
         );
       } catch (e) {
         // Se a API falhar, remove o usuário do Firebase para manter consistência
@@ -158,15 +154,6 @@ class _TelaCadastroState extends State<TelaCadastro> {
                     prefixIcon: Icons.phone_outlined,
                     controller: _telefoneController,
                     keyboardType: TextInputType.phone,
-                  ),
-
-                  const SizedBox(height: AppSizes.formGap),
-
-                  AppTextField(
-                    label: 'Codigo de vinculacao',
-                    hint: 'Opcional - receba do admin',
-                    prefixIcon: Icons.link,
-                    controller: _codigoVinculacaoController,
                   ),
 
                   const SizedBox(height: AppSizes.formGap),

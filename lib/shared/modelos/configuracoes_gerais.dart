@@ -17,12 +17,12 @@ class ConfiguracoesGerais {
 
   factory ConfiguracoesGerais.fromJson(Map<String, dynamic> json) {
     return ConfiguracoesGerais(
-      id: json['_id'] as String,
-      valorCicloMensal: (json['valorCicloMensal'] as num).toDouble(),
-      diaria: (json['diaria'] as num).toDouble(),
-      valorMensalista: (json['valorMensalista'] as num).toDouble(),
-      diaFutebol: (json['diaFutebol'] as num).toInt(),
-      horaFutebol: json['horaFutebol'] as String,
+      id: (json['_id'] as String?) ?? '',
+      valorCicloMensal: (json['valorCicloMensal'] as num?)?.toDouble() ?? 0,
+      diaria: (json['diaria'] as num?)?.toDouble() ?? 0,
+      valorMensalista: (json['valorMensalista'] as num?)?.toDouble() ?? 0,
+      diaFutebol: (json['diaFutebol'] as num?)?.toInt() ?? 0,
+      horaFutebol: (json['horaFutebol'] as String?) ?? '21:00',
     );
   }
 }

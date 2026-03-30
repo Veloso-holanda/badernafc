@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../shared/shared.dart';
 import 'tela_jogadores.dart';
+import 'tela_partidas.dart';
 
 class TelaHome extends StatefulWidget {
   const TelaHome({super.key});
@@ -33,10 +34,11 @@ class _TelaHomeState extends State<TelaHome> {
     });
 
     try {
+      final timeId = ContextoTime.timeIdAtivo!;
       final resultados = await Future.wait([
         ServicoApi.obterMeuPerfil(),
-        ServicoApi.obterCicloAtual(),
-        ServicoApi.obterConfiguracoesGerais(),
+        ServicoApi.obterCicloAtual(timeId),
+        ServicoApi.obterConfiguracoesGerais(timeId),
       ]);
       final usuario = resultados[0] as Usuario;
       final ciclo = resultados[1] as CicloMensal?;
@@ -46,7 +48,7 @@ class _TelaHomeState extends State<TelaHome> {
       Partida? partida;
       Partida? proximaPartida;
       if (ciclo != null) {
-        final partidas = await ServicoApi.obterPartidasDoCiclo(ciclo.id);
+        final partidas = await ServicoApi.obterPartidasDoCiclo(timeId, ciclo.id);
         debugPrint('[Home] partidas encontradas: ${partidas.length}');
         for (final p in partidas) {
           debugPrint('[Home] partida ${p.id} | status: ${p.status} | data: ${p.data} | abertura: ${p.aberturaLista}');
@@ -92,7 +94,7 @@ class _TelaHomeState extends State<TelaHome> {
   }
 
   Future<void> _confirmarPresenca() async {
-    final jogadorId = _usuario?.jogadorVinculadoId;
+    final jogadorId = ContextoTime.jogadorIdAtual;
     if (jogadorId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Você precisa vincular um jogador antes de confirmar presença.')),
@@ -103,7 +105,7 @@ class _TelaHomeState extends State<TelaHome> {
     if (_partida == null) return;
 
     try {
-      await ServicoApi.confirmarPresenca(_partida!.id, jogadorId);
+      await ServicoApi.confirmarPresenca(ContextoTime.timeIdAtivo!, _partida!.id, jogadorId);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Presença confirmada!')),
@@ -129,7 +131,7 @@ class _TelaHomeState extends State<TelaHome> {
             aoTrocar: (indice) => setState(() => _indiceNavbar = indice),
             itens: const [
               ItemNavbar(icone: Icons.home, label: 'Home'),
-              ItemNavbar(icone: Icons.shield_outlined, label: 'Times'),
+              ItemNavbar(icone: Icons.sports_soccer, label: 'Partidas'),
               ItemNavbar(icone: Icons.people_outline, label: 'Jogadores'),
               ItemNavbar(icone: Icons.settings_outlined, label: 'Config'),
             ],
@@ -145,8 +147,8 @@ class _TelaHomeState extends State<TelaHome> {
         return _buildHome();
       case 2:
         return TelaJogadores(
-          ehAdmin: _usuario?.ehAdmin ?? false,
-          usuarioJaVinculado: _usuario?.temJogadorVinculado ?? false,
+          ehAdmin: ContextoTime.ehAdmin,
+          usuarioJaVinculado: ContextoTime.jogadorIdAtual != null,
         );
       case 3:
         if (_carregando) {
@@ -172,6 +174,8 @@ class _TelaHomeState extends State<TelaHome> {
             ],
           ),
         );
+      case 1:
+        return const TelaPartidas();
       default:
         return Center(
           child: Text(
@@ -400,7 +404,7 @@ class _TelaHomeState extends State<TelaHome> {
           ),
 
         // FAB Sortear (admin, partida fechada)
-        if (_usuario?.ehAdmin == true &&
+        if (ContextoTime.ehAdmin &&
             _partida != null &&
             _partida!.status == 'fechada')
           Positioned(
@@ -540,7 +544,29 @@ class _TelaHomeState extends State<TelaHome> {
     );
   }
 
+  Future<void> _alterarNotaPartida(Jogador jogador, int novaNota) async {
+    if (_partida == null) return;
+    try {
+      await ServicoApi.alterarNotaPartida(
+        ContextoTime.timeIdAtivo!,
+        _partida!.id,
+        jogador.id,
+        novaNota,
+      );
+      if (!mounted) return;
+      _carregarDados();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao alterar nota: $e')),
+      );
+    }
+  }
+
   Widget _buildLinhaJogador(int numero, Jogador jogador, {bool alternar = false}) {
+    final notaExibida = jogador.nota ?? jogador.nivel;
+    final ehAdmin = ContextoTime.ehAdmin;
+
     return GestureDetector(
       onTap: () => _abrirPerfilJogador(jogador),
       child: Container(
@@ -566,12 +592,18 @@ class _TelaHomeState extends State<TelaHome> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(5, (i) {
-                return Text(
-                  '★',
-                  style: AppTypography.starRating.copyWith(
-                    color: i < jogador.nivel
-                        ? AppColors.star
-                        : AppColors.starInactive,
+                final estrela = i + 1;
+                return GestureDetector(
+                  onTap: ehAdmin ? () => _alterarNotaPartida(jogador, estrela) : null,
+                  child: Text(
+                    '★',
+                    style: AppTypography.starRating.copyWith(
+                      color: i < notaExibida
+                          ? (jogador.nota != null && jogador.nota != jogador.nivel
+                              ? AppColors.adminBadge
+                              : AppColors.star)
+                          : AppColors.starInactive,
+                    ),
                   ),
                 );
               }),
@@ -649,16 +681,16 @@ class _ModalPerfilJogadorHome extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Color(0xFF3D2A0F),
-            Color(0xFF2A1A06),
-            Color(0xFF1A1208),
+            AppColors.cartaGradientClaro,
+            AppColors.cartaGradientMedio,
+            AppColors.cartaGradientEscuro,
           ],
         ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: AppColors.star, width: 2.5),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x55E8922E),
+            color: AppColors.cartaSombra,
             blurRadius: 24,
             spreadRadius: 4,
           ),
@@ -725,7 +757,7 @@ class _ModalPerfilJogadorHome extends StatelessWidget {
                     border: Border.all(color: AppColors.star, width: 3),
                     boxShadow: const [
                       BoxShadow(
-                        color: Color(0x44E8922E),
+                        color: AppColors.cartaSombraLeve,
                         blurRadius: 16,
                         spreadRadius: 2,
                       ),
