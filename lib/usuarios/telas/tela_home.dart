@@ -663,7 +663,7 @@ class _ModalPerfilJogadorHome extends StatelessWidget {
             Expanded(
               child: SingleChildScrollView(
                 controller: scrollController,
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                padding: AppSizes.cartaScrollPadding,
                 child: _buildCarta(),
               ),
             ),
@@ -706,7 +706,7 @@ class _ModalPerfilJogadorHome extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            padding: AppSizes.cartaContentPadding,
             child: Column(
               children: [
                 // Topo: nível e badge
@@ -714,7 +714,7 @@ class _ModalPerfilJogadorHome extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: AppSizes.cartaNivelPadding,
                       decoration: BoxDecoration(
                         color: AppColors.star.withValues(alpha: 0.2),
                         borderRadius: AppSizes.borderRadiusMd,
@@ -730,7 +730,7 @@ class _ModalPerfilJogadorHome extends StatelessWidget {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: AppSizes.cartaBadgePadding,
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.3),
                         borderRadius: AppSizes.borderRadiusPill,
@@ -832,7 +832,7 @@ class _ModalPerfilJogadorHome extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (i) {
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      padding: AppSizes.cartaEstrelaPadding,
                       child: Icon(
                         Icons.star_rounded,
                         size: AppSizes.starPerfil,

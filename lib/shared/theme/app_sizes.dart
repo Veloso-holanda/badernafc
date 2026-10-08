@@ -25,6 +25,10 @@ abstract final class AppSizes {
   static const double inputGap = 8;
   static const double tableGap = 2;
 
+  // Gaps específicos da tela de login
+  static const double loginTopGap = 20;
+  static const double loginBotaoLinkGap = 40;
+
   // Border Radius
   static const double radiusSm = 4;
   static const double radiusMd = 8;
@@ -100,4 +104,11 @@ abstract final class AppSizes {
 
   // Exit button
   static const EdgeInsets exitButtonPadding = EdgeInsets.symmetric(vertical: 14, horizontal: xl);
+
+  // Carta do jogador (estilo álbum da Copa) — compartilhado por TelaJogadores e TelaHome
+  static const EdgeInsets cartaScrollPadding = EdgeInsets.fromLTRB(24, md, 24, xxxl);
+  static const EdgeInsets cartaContentPadding = EdgeInsets.symmetric(horizontal: 24, vertical: 28);
+  static const EdgeInsets cartaNivelPadding = EdgeInsets.symmetric(horizontal: 14, vertical: 6);
+  static const EdgeInsets cartaBadgePadding = EdgeInsets.symmetric(horizontal: 12, vertical: 6);
+  static const EdgeInsets cartaEstrelaPadding = EdgeInsets.symmetric(horizontal: 3);
 }

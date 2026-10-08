@@ -14,7 +14,6 @@ class _TelaLoginState extends State<TelaLogin> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _senhaController = TextEditingController();
-  bool _senhaVisivel = false;
   bool _carregando = false;
 
   @override
@@ -67,7 +66,7 @@ class _TelaLoginState extends State<TelaLogin> {
             key: _formKey,
             child: Column(
               children: [
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSizes.loginTopGap),
 
                 // Logo
                 Image.asset(
@@ -116,16 +115,7 @@ class _TelaLoginState extends State<TelaLogin> {
                   hint: '••••••••',
                   prefixIcon: Icons.lock_outline,
                   controller: _senhaController,
-                  obscureText: !_senhaVisivel,
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _senhaVisivel ? Icons.visibility_off : Icons.visibility,
-                      color: AppColors.textMuted,
-                      size: AppSizes.iconMd,
-                    ),
-                    onPressed: () =>
-                        setState(() => _senhaVisivel = !_senhaVisivel),
-                  ),
+                  obscuravel: true,
                   validator: (valor) {
                     if (valor == null || valor.isEmpty) {
                       return 'Informe sua senha';
@@ -169,7 +159,7 @@ class _TelaLoginState extends State<TelaLogin> {
                   ),
                 ),
 
-                const SizedBox(height: AppSizes.xxl + 20),
+                const SizedBox(height: AppSizes.loginBotaoLinkGap),
 
                 // Link cadastro
                 Row(

@@ -17,8 +17,6 @@ class _TelaCadastroState extends State<TelaCadastro> {
   final _telefoneController = TextEditingController();
   final _senhaController = TextEditingController();
   final _confirmarSenhaController = TextEditingController();
-  bool _senhaVisivel = false;
-  bool _confirmarSenhaVisivel = false;
   bool _carregando = false;
 
   @override
@@ -163,16 +161,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                     hint: '••••••••',
                     prefixIcon: Icons.lock_outline,
                     controller: _senhaController,
-                    obscureText: !_senhaVisivel,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _senhaVisivel ? Icons.visibility_off : Icons.visibility,
-                        color: AppColors.textMuted,
-                        size: AppSizes.iconMd,
-                      ),
-                      onPressed: () =>
-                          setState(() => _senhaVisivel = !_senhaVisivel),
-                    ),
+                    obscuravel: true,
                     validator: (valor) {
                       if (valor == null || valor.isEmpty) {
                         return 'Informe sua senha';
@@ -191,18 +180,7 @@ class _TelaCadastroState extends State<TelaCadastro> {
                     hint: '••••••••',
                     prefixIcon: Icons.lock_outline,
                     controller: _confirmarSenhaController,
-                    obscureText: !_confirmarSenhaVisivel,
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _confirmarSenhaVisivel
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                        color: AppColors.textMuted,
-                        size: AppSizes.iconMd,
-                      ),
-                      onPressed: () => setState(
-                          () => _confirmarSenhaVisivel = !_confirmarSenhaVisivel),
-                    ),
+                    obscuravel: true,
                     validator: (valor) {
                       if (valor == null || valor.isEmpty) {
                         return 'Confirme sua senha';

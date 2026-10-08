@@ -686,7 +686,7 @@ class _ModalPerfilJogadorState extends State<_ModalPerfilJogador> {
             Expanded(
               child: SingleChildScrollView(
                 controller: scrollController,
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+                padding: AppSizes.cartaScrollPadding,
                 child: Column(
                   children: [
                     _buildCartaCopa(),
@@ -742,7 +742,7 @@ class _ModalPerfilJogadorState extends State<_ModalPerfilJogador> {
 
           // Conteúdo da carta
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+            padding: AppSizes.cartaContentPadding,
             child: Column(
               children: [
                 // Topo: nível e badge
@@ -751,7 +751,7 @@ class _ModalPerfilJogadorState extends State<_ModalPerfilJogador> {
                   children: [
                     // Nível grande estilo FIFA
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                      padding: AppSizes.cartaNivelPadding,
                       decoration: BoxDecoration(
                         color: AppColors.star.withValues(alpha: 0.2),
                         borderRadius: AppSizes.borderRadiusMd,
@@ -768,7 +768,7 @@ class _ModalPerfilJogadorState extends State<_ModalPerfilJogador> {
                     ),
                     // Badge BADERNA
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: AppSizes.cartaBadgePadding,
                       decoration: BoxDecoration(
                         color: AppColors.primary.withValues(alpha: 0.3),
                         borderRadius: AppSizes.borderRadiusPill,
@@ -876,7 +876,7 @@ class _ModalPerfilJogadorState extends State<_ModalPerfilJogador> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: List.generate(5, (i) {
                     return Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      padding: AppSizes.cartaEstrelaPadding,
                       child: Icon(
                         Icons.star_rounded,
                         size: AppSizes.starPerfil,
